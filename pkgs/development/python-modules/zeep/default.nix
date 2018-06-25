@@ -20,17 +20,18 @@
 , pytestcov
 , requests-mock
 , testtools
+, tornado
 }:
 
 let
   pname = "zeep";
-  version = "2.0.0";
+  version = "3.0.0";
 in buildPythonPackage {
   name = "${pname}-${version}";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "5b9bd6b8772d6b505118c11d6924eb7df0decf12bbbeb43b1c27d781817361ad";
+    sha256 = "faab59d57275ce35845f42371cca83b3957982cdca9621228153fb99c770c4fc";
   };
 
   propagatedBuildInputs = [
@@ -46,6 +47,10 @@ in buildPythonPackage {
 
   # testtools dependency not supported for py3k
   doCheck = !isPy3k;
+
+  checkInputs = [
+    tornado
+  ];
 
   buildInputs = if isPy3k then [] else [
     freezegun
@@ -83,7 +88,7 @@ in buildPythonPackage {
   '';
 
   meta = with lib; {
-    homepage = "http://docs.python-zeep.org";
+    homepage = http://docs.python-zeep.org;
     license = licenses.mit;
     description = "A modern/fast Python SOAP client based on lxml / requests";
     maintainers = with maintainers; [ rvl ];

@@ -1,18 +1,24 @@
-{ stdenv, lib, fetchurl, python, wrapPython }:
+{ stdenv
+, fetchPypi
+, python
+, wrapPython
+, unzip
+}:
 
+# Should use buildPythonPackage here somehow
 stdenv.mkDerivation rec {
   pname = "setuptools";
-  shortName = "${pname}-${version}";
-  name = "${python.libPrefix}-${shortName}";
+  version = "39.2.0";
+  name = "${python.libPrefix}-${pname}-${version}";
 
-  version = "30.2.0";
-
-  src = fetchurl {
-    url = "mirror://pypi/${builtins.substring 0 1 pname}/${pname}/${shortName}.tar.gz";
-    sha256 = "f865709919903e3399343c0b3c42f95e9aeddc41e38cfb334fb2bb5dfa384857";
+  src = fetchPypi {
+    inherit pname version;
+    extension = "zip";
+    sha256 = "f7cddbb5f5c640311eb00eab6e849f7701fa70bf6a183fc8a2c33dd1d1672fb2";
   };
 
-  buildInputs = [ python wrapPython ];
+  nativeBuildInputs = [ unzip wrapPython ];
+  buildInputs = [ python ];
   doCheck = false;  # requires pytest
   installPhase = ''
       dst=$out/${python.sitePackages}
@@ -26,9 +32,9 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "Utilities to facilitate the installation of Python packages";
-    homepage = http://pypi.python.org/pypi/setuptools;
-    license = with lib.licenses; [ psfl zpt20 ];
-    platforms = platforms.all;
+    homepage = https://pypi.python.org/pypi/setuptools;
+    license = with licenses; [ psfl zpl20 ];
+    platforms = python.meta.platforms;
     priority = 10;
   };
 }

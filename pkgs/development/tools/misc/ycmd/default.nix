@@ -7,23 +7,22 @@
 
 stdenv.mkDerivation rec {
   name = "ycmd-${version}";
-  version = "2017-03-27";
+  version = "2018-06-14";
 
   src = fetchgit {
-    url = "git://github.com/Valloric/ycmd.git";
-    rev = "2ef1ae0d00a06a47fed3aacfd465a310e8bdb0d2";
-    sha256 = "0p5knlxgy66zi229ns1lfdhz5lram93vahmmk54w98fr3h8b1yfj";
+    url = "https://github.com/Valloric/ycmd.git";
+    rev = "29e36f74f749d10b8d6ce285c1453fac26f15a41";
+    sha256 = "0s62nf18jmgjihyba7lk7si8xrxsg60whdr430nlb5gjikag8zr5";
   };
 
-  buildInputs = [ cmake boost ]
+  nativeBuildInputs = [ cmake ];
+  buildInputs = [ boost llvmPackages.libclang ]
     ++ stdenv.lib.optional stdenv.isDarwin [ fixDarwinDylibNames Cocoa ];
 
   buildPhase = ''
     export EXTRA_CMAKE_ARGS=-DPATH_TO_LLVM_ROOT=${llvmPackages.clang-unwrapped}
-    ${python.interpreter} build.py --clang-completer --system-boost
+    ${python.interpreter} build.py --system-libclang --clang-completer --system-boost
   '';
-
-  patches = [ ./dont-symlink-clang.patch ];
 
   configurePhase = ":";
 
@@ -52,8 +51,7 @@ stdenv.mkDerivation rec {
 
     mkdir -p $out/lib/ycmd/third_party/{gocode,godef,racerd/target/release}
 
-    cp -r third_party/JediHTTP $out/lib/ycmd/third_party
-    for p in waitress frozendict bottle python-future argparse requests; do
+    for p in jedi waitress frozendict bottle python-future requests; do
       cp -r third_party/$p $out/lib/ycmd/third_party
     done
 

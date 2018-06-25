@@ -12,7 +12,8 @@ stdenv.mkDerivation rec {
     sha256 = "0v1m8w877fcrk918p6b6q3753dsz8i1f4mb9bi064cp11kh85nq5";
   };
 
-  buildInputs = [ pkgconfig libX11 xextproto libXtst libXi libXext libXinerama
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ libX11 xextproto libXtst libXi libXext libXinerama
                   glib cairo xdotool ];
 
   patchPhase = ''
@@ -30,7 +31,7 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "Generate X11 mouse clicks from keyboard";
-    homepage = http://www.semicomplete.com/projects/keynav/;
+    homepage = https://www.semicomplete.com/projects/keynav/;
     license = licenses.bsd3;
     maintainers = with maintainers; [ pSub ];
     platforms = platforms.linux;

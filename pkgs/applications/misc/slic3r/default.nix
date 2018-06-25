@@ -12,11 +12,16 @@ stdenv.mkDerivation rec {
     sha256 = "1z8h11k29b7z49z5k8ikyfiijyycy1q3krlzi8hfd0vdybvymw21";
   };
 
+  patches = [
+    ./gcc6.patch
+  ];
+
   buildInputs = with perlPackages; [ perl makeWrapper which
     EncodeLocale MathClipper ExtUtilsXSpp threads
     MathConvexHullMonotoneChain MathGeometryVoronoi MathPlanePath Moo
     IOStringy ClassXSAccessor Wx GrowlGNTP NetDBus ImportInto XMLSAX
     ExtUtilsMakeMaker OpenGL WxGLCanvas ModuleBuild LWP
+    ExtUtilsCppGuess ModuleBuildWithXSpp ExtUtilsTypemapsDefault
   ];
 
   desktopItem = makeDesktopItem {
@@ -31,6 +36,7 @@ stdenv.mkDerivation rec {
 
   buildPhase = ''
     export SLIC3R_NO_AUTO=true
+    export LD=$CXX
     export PERL5LIB="./xs/blib/arch/:./xs/blib/lib:$PERL5LIB"
 
     substituteInPlace Build.PL \

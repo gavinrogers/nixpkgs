@@ -1,17 +1,19 @@
-{ stdenv, buildPythonPackage, fetchurl, pytest, isPy3k }:
+{ stdenv, buildPythonPackage, fetchPypi, pytest, isPy3k }:
 buildPythonPackage rec {
-  name = "${pname}-${version}";
   pname = "pytest-asyncio";
-  version = "0.5.0";
+  version = "0.8.0";
 
   disabled = !isPy3k;
 
-  src = fetchurl {
-    url = "mirror://pypi/p/${pname}/${name}.tar.gz";
-    sha256 = "03sxq8fglr4lw4y6wqlbli9ypr65fxzx6hlpn5wpccx8v5472iff";
+  src = fetchPypi {
+    inherit pname version;
+    sha256 = "f32804bb58a66e13a3eda11f8942a71b1b6a30466b0d2ffe9214787aab0e172e";
   };
 
   buildInputs = [ pytest ];
+
+  # No tests in archive
+  doCheck = false;
 
   meta = with stdenv.lib; {
     description = "library for testing asyncio code with pytest";

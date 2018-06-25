@@ -1,18 +1,32 @@
 { stdenv, buildGoPackage, fetchFromGitHub }:
 
 buildGoPackage rec {
-  name = "lf-unstable-${version}";
-  version = "2017-05-15";
+  name = "lf-${version}";
+  version = "5";
 
   src = fetchFromGitHub {
     owner = "gokcehan";
     repo = "lf";
-    rev = "9962b378a816c2f792dcbfe9e3f58ae16d5969dd"; # nightly
-    sha256 = "1ln14ma2iajlp9klj4bhrq0y9955rpw9aggvj7hcj1m5yqa0sdqn";
+    rev = "r${version}";
+    sha256 = "0qgvaa69xs97x42j1ikb03bzpm497z9h3qk7adbdippaqcj40s70";
   };
 
   goPackagePath = "github.com/gokcehan/lf";
   goDeps = ./deps.nix;
+
+  # TODO: Setting buildFlags probably isn't working properly. I've tried a few
+  # variants, e.g.:
+  # - buildFlags = "-ldflags \"-s -w -X 'main.gVersion=${version}'\"";
+  # - buildFlags = "-ldflags \\\"-X ${goPackagePath}/main.gVersion=${version}\\\"";
+
+  # Override the build phase (to set buildFlags):
+  buildPhase = ''
+    runHook preBuild
+    runHook renameImports
+    cd go/src/${goPackagePath}
+    go install -ldflags="-s -w -X main.gVersion=r${version}"
+    runHook postBuild
+  '';
 
   meta = with stdenv.lib; {
     description = "A terminal file manager written in Go and heavily inspired by ranger";
@@ -22,9 +36,9 @@ buildGoPackage rec {
       the missing features are deliberately omitted since it is better if they
       are handled by external tools.
     '';
-    homepage = "https://godoc.org/github.com/gokcehan/lf";
+    homepage = https://godoc.org/github.com/gokcehan/lf;
     license = licenses.mit;
-    platforms = platforms.linux;
+    platforms = platforms.unix;
     maintainers = with maintainers; [ primeos ];
   };
 }

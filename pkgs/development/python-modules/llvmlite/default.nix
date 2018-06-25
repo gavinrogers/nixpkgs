@@ -1,5 +1,5 @@
 { stdenv
-, fetchurl
+, fetchPypi
 , buildPythonPackage
 , python
 , llvm
@@ -10,21 +10,20 @@
 
 buildPythonPackage rec {
   pname = "llvmlite";
-  name = "${pname}-${version}";
-  version = "0.18.0";
+  version = "0.23.2";
 
   disabled = isPyPy;
 
-  src = fetchurl {
-    url = "mirror://pypi/${builtins.substring 0 1 pname}/${pname}/${name}.tar.gz";
-    sha256 = "25a38af925f0523b834b92216d7f7cc997624942d5958287350c254f5e730404";
+  src = fetchPypi {
+    inherit pname version;
+    sha256 = "1e63f317b8fb3679d3a397920b1e8bade2d5f471f6c60c7e9bf97746f616f79e";
   };
 
   propagatedBuildInputs = [ llvm ] ++ stdenv.lib.optional (pythonOlder "3.4") enum34;
 
   # Disable static linking
   # https://github.com/numba/llvmlite/issues/93
-  patchPhase = ''
+  postPatch = ''
     substituteInPlace ffi/Makefile.linux --replace "-static-libstdc++" ""
 
     substituteInPlace llvmlite/tests/test_binding.py --replace "test_linux" "nope"
@@ -43,7 +42,7 @@ buildPythonPackage rec {
 
   meta = {
     description = "A lightweight LLVM python binding for writing JIT compilers";
-    homepage = "http://llvmlite.pydata.org/";
+    homepage = http://llvmlite.pydata.org/;
     license = stdenv.lib.licenses.bsd2;
     maintainers = with stdenv.lib.maintainers; [ fridh ];
   };

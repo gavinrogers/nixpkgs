@@ -1,12 +1,12 @@
 { stdenv, fetchurl, cmake, pcre, zlib, python, openssl }:
 
 stdenv.mkDerivation rec {
-  name = "cppcms";
-  version = "1.0.5";
+  name = "cppcms-${version}";
+  version = "1.2.1";
 
   src = fetchurl {
-      url = "mirror://sourceforge/cppcms/${name}-${version}.tar.bz2";
-      sha256 = "0r8qyp102sq4lw8xhrjhan0dnslhsmxj4zs9jzlw75yagfbqbdl4";
+      url = "mirror://sourceforge/cppcms/${name}.tar.bz2";
+      sha256 = "0lmcdjzicmzhnr8pa0q3f5lgapz2cnh9w0dr56i4kj890iqwgzhh";
   };
 
   enableParallelBuilding = true;
@@ -18,7 +18,7 @@ stdenv.mkDerivation rec {
   ];
 
   meta = with stdenv.lib; {
-    homepage = "http://cppcms.com";
+    homepage = http://cppcms.com;
     description = "High Performance C++ Web Framework";
     platforms = platforms.linux ;
     license = licenses.lgpl3;

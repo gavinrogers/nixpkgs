@@ -1,36 +1,38 @@
-{ stdenv, fetchurl, cmake, freetype, libpng, mesa, gettext, openssl, perl, libiconv
-, qtscript, qtserialport, qttools, makeQtWrapper
-, qtmultimedia
+{ mkDerivation, lib, fetchFromGitHub
+, cmake, freetype, libpng, libGLU_combined, gettext, openssl, perl, libiconv
+, qtscript, qtserialport, qttools
+, qtmultimedia, qtlocation, makeWrapper, qtbase
 }:
 
-stdenv.mkDerivation rec {
+mkDerivation rec {
   name = "stellarium-${version}";
-  version = "0.15.0";
+  version = "0.18.0";
 
-  src = fetchurl {
-    url = "mirror://sourceforge/stellarium/${name}.tar.gz";
-    sha256 = "0il751lgnfkx35h1m8fzwwnrygpxjx2a80gng1i1rbybkykf7l3l";
+  src = fetchFromGitHub {
+    owner = "Stellarium";
+    repo = "stellarium";
+    rev = "v${version}";
+    sha256 = "11rh4gan8bhqb2n6a94g773drbq4ffii7aqjwxv97r036579azb2";
   };
 
-  nativeBuildInputs = [ makeQtWrapper ];
+  nativeBuildInputs = [ cmake perl ];
 
   buildInputs = [
-    cmake freetype libpng mesa gettext openssl perl libiconv qtscript
-    qtserialport qttools qtmultimedia
+    freetype libpng libGLU_combined openssl libiconv qtscript qtserialport qttools
+    qtmultimedia qtlocation qtbase makeWrapper
   ];
 
-  enableParallelBuilding = true;
-
   postInstall = ''
-    wrapQtProgram "$out/bin/stellarium"
+    wrapProgram $out/bin/stellarium \
+      --prefix QT_PLUGIN_PATH : "${qtbase}/lib/qt-5.${lib.versions.minor qtbase.version}/plugins"
   '';
 
-  meta = {
+  meta = with lib; {
     description = "Free open-source planetarium";
-    homepage = "http://stellarium.org/";
-    license = stdenv.lib.licenses.gpl2;
+    homepage = http://stellarium.org/;
+    license = licenses.gpl2;
 
-    platforms = stdenv.lib.platforms.linux; # should be mesaPlatforms, but we don't have qt on darwin
-    maintainers = [ stdenv.lib.maintainers.peti ];
+    platforms = platforms.linux; # should be mesaPlatforms, but we don't have qt on darwin
+    maintainers = with maintainers; [ peti ma27 ];
   };
 }

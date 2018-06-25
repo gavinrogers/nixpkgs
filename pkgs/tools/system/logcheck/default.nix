@@ -2,13 +2,18 @@
 
 stdenv.mkDerivation rec {
   name = "logcheck-${version}";
-  version = "1.3.18";
+  version = "1.3.19";
   _name    = "logcheck_${version}";
 
   src = fetchurl {
     url = "mirror://debian/pool/main/l/logcheck/${_name}.tar.xz";
-    sha256 = "1x4skb5nmv2xj8cygj8pq1rd1ws4m2fsibw54yslgdyjri4r2yq7";
+    sha256 = "1a9ccy92lg1lnx86di6i1wpdv4ccf5w7gials2iyq5915c4lqa86";
   };
+
+  prePatch = ''
+    # do not set sticky bit in nix store.
+    substituteInPlace Makefile --replace 2750 0750
+  '';
 
   preConfigure = ''
     substituteInPlace src/logtail --replace "/usr/bin/perl" "${perl}/bin/perl"

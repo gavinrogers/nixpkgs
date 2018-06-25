@@ -10,18 +10,18 @@ name: version: sha256: args: let
 
       patchPhase = ''
         # allows including <Security/some-private-header.h>
-        ln -s ${pkgs.darwin.osx_private_sdk}/PrivateSDK10.9.sparse.sdk/System/Library/Frameworks/Security.framework/Versions/A/PrivateHeaders Security
+        cp -R ${pkgs.darwin.osx_private_sdk}/include/SecurityPrivateHeaders Security
 
         grep -Rl MacErrors.h . | while read file; do
           substituteInPlace "''$file" --replace \
             '<CoreServices/../Frameworks/CarbonCore.framework/Headers/MacErrors.h>' \
-            '"${pkgs.darwin.apple_sdk.sdk}/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers/MacErrors.h"'
+            '"${pkgs.darwin.apple_sdk.sdk.out}/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers/MacErrors.h"'
         done || true # grep returns 1 if it can't find the string
-        
+
         grep -Rl MacTypes.h . | while read file; do
           substituteInPlace "''$file" --replace \
             '<CoreServices/../Frameworks/CarbonCore.framework/Headers/MacTypes.h>' \
-            '"${pkgs.darwin.apple_sdk.sdk}/include/MacTypes.h"'
+            '"${pkgs.darwin.apple_sdk.sdk.out}/include/MacTypes.h"'
         done || true # grep returns 1 if it can't find the string
       '';
       preBuild = ''

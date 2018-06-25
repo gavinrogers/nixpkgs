@@ -17,14 +17,14 @@ stdenv.mkDerivation rec {
 
   patchPhase = ''
     # copied from libsecurity_generic
-    ln -s ${osx_private_sdk}/PrivateSDK10.9.sparse.sdk/System/Library/Frameworks/Security.framework/Versions/A/PrivateHeaders Security
+    cp -R ${osx_private_sdk}/include/SecurityPrivateHeaders Security
 
     substituteInPlace cmsutil.c --replace \
       '<CoreServices/../Frameworks/CarbonCore.framework/Headers/MacErrors.h>' \
-      '"${apple_sdk.sdk}/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers/MacErrors.h"'
+      '"${apple_sdk.sdk.out}/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers/MacErrors.h"'
     substituteInPlace createFVMaster.c --replace \
       '<CoreServices/../Frameworks/CarbonCore.framework/Headers/MacErrors.h>' \
-      '"${apple_sdk.sdk}/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers/MacErrors.h"'
+      '"${apple_sdk.sdk.out}/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers/MacErrors.h"'
   '';
 
   postUnpack = ''
@@ -88,7 +88,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with stdenv.lib; {
-    description = "Command line interface to Mac OS X keychains and Security framework";
+    description = "Command line interface to macOS keychains and Security framework";
     maintainers = with maintainers; [
       copumpkin
       joelteon

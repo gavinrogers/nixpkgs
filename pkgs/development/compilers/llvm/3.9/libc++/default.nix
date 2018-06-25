@@ -14,21 +14,33 @@ stdenv.mkDerivation rec {
     cmakeFlagsArray=($cmakeFlagsArray -DLIBCXX_CXX_ABI_INCLUDE_PATHS="$NIX_BUILD_TOP/libcxxabi-${version}.src/include")
   '';
 
-  patches = lib.optional stdenv.isDarwin ./darwin.patch;
+  patches = [
+    # glibc 2.26 fix
+    ./xlocale-glibc-2.26.patch
+  ]
+  ++ lib.optional stdenv.isDarwin ./darwin.patch
+  ++ stdenv.lib.optionals stdenv.hostPlatform.isMusl [
+    ../../libcxx-0001-musl-hacks.patch
+    ../../libcxx-max_align_t.patch
+  ];
 
-  buildInputs = [ cmake libcxxabi ] ++ lib.optional stdenv.isDarwin fixDarwinDylibNames;
+  nativeBuildInputs = [ cmake ];
+  buildInputs = [ libcxxabi ] ++ lib.optional stdenv.isDarwin fixDarwinDylibNames;
 
   cmakeFlags = [
-      "-DLIBCXX_LIBCXXABI_LIB_PATH=${libcxxabi}/lib"
-      "-DLIBCXX_LIBCPPABI_VERSION=2"
-      "-DLIBCXX_CXX_ABI=libcxxabi"
-    ];
+    "-DLIBCXX_LIBCXXABI_LIB_PATH=${libcxxabi}/lib"
+    "-DLIBCXX_LIBCPPABI_VERSION=2"
+    "-DLIBCXX_CXX_ABI=libcxxabi"
+  ] ++ stdenv.lib.optional stdenv.hostPlatform.isMusl "-DLIBCXX_HAS_MUSL_LIBC=1";
 
   enableParallelBuilding = true;
 
   linkCxxAbi = stdenv.isLinux;
 
-  setupHook = ./setup-hook.sh;
+  setupHooks = [
+    ../../../../../build-support/setup-hooks/role.bash
+    ./setup-hook.sh
+  ];
 
   meta = {
     homepage = http://libcxx.llvm.org/;

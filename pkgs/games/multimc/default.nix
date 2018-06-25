@@ -1,46 +1,35 @@
-{ stdenv, fetchFromGitHub, cmake, jdk, zlib, file, makeWrapper, xorg, libpulseaudio, qtbase, quazip }:
+{ stdenv, fetchFromGitHub, cmake, jdk, zlib, file, makeWrapper, xorg, libpulseaudio, qtbase }:
 
 let
-  libnbt = fetchFromGitHub {
-    owner = "MultiMC";
-    repo = "libnbtplusplus";
-    rev = "4b305bb";
-    sha256 = "1zj7pxk0g5zl16hrngb4rss00hi019rylin7zgf18kaymc54nbcs";
-  };
-in
-stdenv.mkDerivation {
-  name = "multimc-0.5.1";
+  libpath = with xorg; stdenv.lib.makeLibraryPath [ libX11 libXext libXcursor libXrandr libXxf86vm libpulseaudio ];
+in stdenv.mkDerivation rec {
+  name = "multimc-${version}";
+  # Current release as of 2018-06-23 (v0.6.2) breaks under Qt 5.11—see
+  # https://github.com/NixOS/nixpkgs/issues/42387
+  version = "unstable-2018-06-04";
   src = fetchFromGitHub {
     owner = "MultiMC";
     repo = "MultiMC5";
-    rev = "0.5.1";
-    sha256 = "0wmlnwcq3gxrbmc53j96aa64pp1kmnlxiifhzngcb5kfmbbc8a20";
+    rev = "19bb50b872da2702b8e0b65f3f7b6b54c1c5b071";
+    sha256 = "01frkk2klm1axr7ywnj23ikxn5pkgj8q6w8vqbslsvmh8bni8rk0";
+    fetchSubmodules = true;
   };
-  buildInputs = [ cmake qtbase jdk zlib file makeWrapper ];
-
-  libpath = with xorg; [ libX11 libXext libXcursor libXrandr libXxf86vm libpulseaudio ];
-  postUnpack = ''
-    rmdir $sourceRoot/libraries/libnbtplusplus
-    cp -r ${libnbt} $sourceRoot/libraries/libnbtplusplus
-    chmod 755 -R $sourceRoot/libraries/libnbtplusplus
-    mkdir -pv $sourceRoot/build/
-    cp -v ${quazip.src} $sourceRoot/build/quazip-0.7.1.tar.gz
-  '';
+  nativeBuildInputs = [ cmake file makeWrapper ];
+  buildInputs = [ qtbase jdk zlib ];
 
   enableParallelBuilding = true;
 
-  # the install rule tries to bundle ALL deps into the output for portability
-  installPhase = ''
-    RESULT=/run/opengl-driver/lib/
-    for x in $libpath; do
-      RESULT=$x/lib/:$RESULT
-    done
+  postInstall = ''
+    mkdir -p $out/share/{applications,pixmaps}
+    cp ../application/resources/multimc/scalable/multimc.svg $out/share/pixmaps
+    cp ../application/package/linux/multimc.desktop $out/share/applications
+    wrapProgram $out/bin/MultiMC --add-flags "-d \$HOME/.multimc/" --set GAME_LIBRARY_PATH /run/opengl-driver/lib:${libpath} --prefix PATH : ${jdk}/bin/
 
-    mkdir -pv $out/bin/jars $out/lib
-    cp -v MultiMC $out/bin/
-    cp -v jars/*.jar $out/bin/jars/ #*/
-    cp -v libMultiMC_rainbow.so libMultiMC_nbt++.so libMultiMC_logic.so libMultiMC_gui.so $out/lib
-    wrapProgram $out/bin/MultiMC --add-flags "-d \$HOME/.multimc/" --set GAME_LIBRARY_PATH $RESULT --prefix PATH : ${jdk}/bin/
+    # As of https://github.com/MultiMC/MultiMC5/blob/7ea1d68244fdae1e7672fb84199ee71e168b31ca/application/package/linux/multimc.desktop,
+    # the desktop icon refers to `multimc`, but the executable actually gets
+    # installed as `MultiMC`. Create compatibility symlink to fix the desktop
+    # icon.
+    ln -sf $out/bin/MultiMC $out/bin/multimc
   '';
 
   meta = with stdenv.lib; {

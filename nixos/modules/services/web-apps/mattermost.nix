@@ -25,7 +25,7 @@ in
 {
   options = {
     services.mattermost = {
-      enable = mkEnableOption "Mattermost chat platform";
+      enable = mkEnableOption "Mattermost chat server";
 
       statePath = mkOption {
         type = types.str;
@@ -167,13 +167,13 @@ in
       '';
 
       systemd.services.mattermost = {
-        description = "Mattermost chat platform service";
+        description = "Mattermost chat service";
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" "postgresql.service" ];
 
         preStart = ''
           mkdir -p ${cfg.statePath}/{data,config,logs}
-          ln -sf ${pkgs.mattermost}/{bin,fonts,i18n,templates,webapp} ${cfg.statePath}
+          ln -sf ${pkgs.mattermost}/{bin,fonts,i18n,templates,client} ${cfg.statePath}
         '' + lib.optionalString (!cfg.mutableConfig) ''
           ln -sf ${mattermostConfJSON} ${cfg.statePath}/config/config.json
         '' + lib.optionalString cfg.mutableConfig ''
@@ -184,10 +184,12 @@ in
           fi
         '' + lib.optionalString cfg.localDatabaseCreate ''
           if ! test -e "${cfg.statePath}/.db-created"; then
-            ${config.services.postgresql.package}/bin/psql postgres -c \
-              "CREATE ROLE ${cfg.localDatabaseUser} WITH LOGIN NOCREATEDB NOCREATEROLE NOCREATEUSER ENCRYPTED PASSWORD '${cfg.localDatabasePassword}'"
-            ${config.services.postgresql.package}/bin/createdb \
-              --owner ${cfg.localDatabaseUser} ${cfg.localDatabaseName}
+            ${pkgs.sudo}/bin/sudo -u ${config.services.postgresql.superUser} \
+              ${config.services.postgresql.package}/bin/psql postgres -c \
+                "CREATE ROLE ${cfg.localDatabaseUser} WITH LOGIN NOCREATEDB NOCREATEROLE ENCRYPTED PASSWORD '${cfg.localDatabasePassword}'"
+            ${pkgs.sudo}/bin/sudo -u ${config.services.postgresql.superUser} \
+              ${config.services.postgresql.package}/bin/createdb \
+                --owner ${cfg.localDatabaseUser} ${cfg.localDatabaseName}
             touch ${cfg.statePath}/.db-created
           fi
         '' + ''
@@ -199,13 +201,13 @@ in
           PermissionsStartOnly = true;
           User = cfg.user;
           Group = cfg.group;
-          ExecStart = "${pkgs.mattermost}/bin/mattermost-platform";
+          ExecStart = "${pkgs.mattermost}/bin/mattermost";
           WorkingDirectory = "${cfg.statePath}";
-          JoinsNamespaceOf = mkIf cfg.localDatabaseCreate "postgresql.service";
           Restart = "always";
           RestartSec = "10";
           LimitNOFILE = "49152";
         };
+        unitConfig.JoinsNamespaceOf = mkIf cfg.localDatabaseCreate "postgresql.service";
       };
     })
     (mkIf cfg.matterircd.enable {

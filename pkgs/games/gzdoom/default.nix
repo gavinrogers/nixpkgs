@@ -1,21 +1,21 @@
 { stdenv, fetchFromGitHub, cmake, zdoom, makeWrapper
-, openal, fluidsynth, soundfont-fluid, mesa_noglu, SDL2
+, openal, fluidsynth, soundfont-fluid, libGL, SDL2
 , bzip2, zlib, libjpeg, libsndfile, mpg123, game-music-emu }:
 
 stdenv.mkDerivation rec {
   name = "gzdoom-${version}";
-  version = "3.0.1";
+  version = "3.4.0";
 
   src = fetchFromGitHub {
     owner = "coelckers";
     repo = "gzdoom";
     rev = "g${version}";
-    sha256 = "0s0hl7pa2gr3cm884q7np5naybhv4hqhbfd3s45a8hdf72n6c9cm";
+    sha256 = "09400w0xpw6sk593c0fr6m9qmgn6n5r1qdardizim6m0r5ki565i";
   };
 
   nativeBuildInputs = [ cmake makeWrapper ];
   buildInputs = [
-    SDL2 mesa_noglu openal fluidsynth bzip2 zlib libjpeg libsndfile mpg123
+    SDL2 libGL openal fluidsynth bzip2 zlib libjpeg libsndfile mpg123
     game-music-emu
   ];
 
@@ -40,7 +40,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with stdenv.lib; {
-    homepage = "https://github.com/coelckers/gzdoom";
+    homepage = https://github.com/coelckers/gzdoom;
     description = "A Doom source port based on ZDoom. It features an OpenGL renderer and lots of new features";
     license = licenses.gpl3;
     platforms = platforms.linux;

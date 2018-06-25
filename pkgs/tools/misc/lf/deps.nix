@@ -4,8 +4,8 @@
     fetch = {
       type = "git";
       url = "https://github.com/nsf/termbox-go";
-      rev = "7994c181db7761ca3c67a217068cf31826113f5f"; # master
-      sha256 = "0ssc54wamn3h8z68kv4fdgvk3kjii95psi2kk0slsilmg5v6jzhj";
+      rev = "5c94acc5e6eb520f1bcd183974e01171cc4c23b3"; # master
+      sha256 = "1fi8imdgwvlsgifw2qfl3ww0lsrgkfsimkzz7bnrq41nar78s0fw";
     };
   }
   {

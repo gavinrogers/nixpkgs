@@ -1,41 +1,52 @@
-{ stdenv, fetchurl, cmake
+{ stdenv, fetchurl, fetchpatch, cmake
 , extra-cmake-modules, qtbase, qtscript
-, ki18n, kio, knotifications, knotifyconfig, kdoctools, kross, kcmutils, kdelibs4support
-, libktorrent, boost, taglib
+, karchive, kcrash, kdnssd, ki18n, kio, knotifications, knotifyconfig
+, kdoctools, kross, kcmutils, kwindowsystem
+, libktorrent, boost, taglib, libgcrypt, kplotting
 }:
 
 stdenv.mkDerivation rec {
-  name = pname + "-" + version;
-
-  pname = "ktorrent";
-  version = "5.0.1";
+  name = "ktorrent-${version}";
+  version = "${libktorrent.mainVersion}.0";
 
   src = fetchurl {
-    url = http://download.kde.org/stable/ktorrent/5.0/ktorrent-5.0.1.tar.xz;
-    sha256 = "1rbr932djmn1la6vs2sy1zdf39fmla8vwzfn76h7csncbp5fw3yh";
+    url    = "mirror://kde/stable/ktorrent/${libktorrent.mainVersion}/${name}.tar.xz";
+    sha256 = "18w6qh09k84qpzaxxb76a4g59k4mx5wk897vqp1wwv80g0pqhmrw";
   };
 
-  patches =
-    [ (fetchurl {
-        url = https://cgit.kde.org/ktorrent.git/patch/?id=f48acc22f0105ce6bac63294d248873ae231c6cc;
-        sha256 = "0jm4y35w2ypbjzf165rnjr224nq4w651ydnpd9zdn3inxh8r4s0v";
-      })
-    ];
+  nativeBuildInputs = [ cmake kdoctools extra-cmake-modules ];
 
-  nativeBuildInputs = [ kdoctools extra-cmake-modules ];
+  buildInputs = [
+    qtbase qtscript
+    karchive kcrash kdnssd ki18n kio knotifications knotifyconfig kross kcmutils kwindowsystem
+    libktorrent taglib libgcrypt kplotting
+  ];
 
-  buildInputs =
-    [ cmake qtbase qtscript
-      ki18n kio knotifications knotifyconfig kross kcmutils kdelibs4support
-      libktorrent taglib
-    ];
+  patches = [
+    # Fix build with CMake 3.11
+    (fetchpatch {
+      url = "https://cgit.kde.org/ktorrent.git/patch/?id=672c5076de7e3a526d9bdbb484a69e9386bc49f8";
+      sha256 = "1cn4rnbhadrsxqx50fawpd747azskavbjraygr6s11rh1wbfrxid";
+    })
+
+    # Fix build against Qt 5.11
+    (fetchpatch {
+      url = "https://cgit.kde.org/ktorrent.git/patch/?id=7876857d204188016a135a25938d9f8530fba4e8";
+      sha256 = "1wnmfzkhf6y7fd0z2djwphs6i9lsg7fcrj8fqmbyi0j57dvl9gxl";
+    })
+    (fetchpatch {
+      url = "https://cgit.kde.org/ktorrent.git/patch/?id=36d112e56e56541d439326a267eb906da8b3ee60";
+      sha256 = "1d41pqniljhwqs6awa644s6ks0zwm9sr0hpfygc63wyxnpcrsw2y";
+    })
+  ];
 
   enableParallelBuilding = true;
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "KDE integrated BtTorrent client";
-    homepage = https://www.kde.org/applications/internet/ktorrent/;
-    maintainers = [ stdenv.lib.maintainers.eelco ];
-    platforms = stdenv.lib.platforms.linux;
+    homepage    = https://www.kde.org/applications/internet/ktorrent/;
+    license = licenses.gpl2;
+    maintainers = with maintainers; [ eelco ];
+    platforms   = platforms.linux;
   };
 }

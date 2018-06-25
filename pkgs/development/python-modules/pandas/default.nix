@@ -8,6 +8,7 @@
 , cython
 , dateutil
 , scipy
+, moto
 , numexpr
 , pytz
 , xlrd
@@ -23,20 +24,23 @@
 }:
 
 let
-  inherit (stdenv.lib) optional optionalString concatStringsSep;
+  inherit (stdenv.lib) optional optionals optionalString concatStringsSep;
   inherit (stdenv) isDarwin;
+
 in buildPythonPackage rec {
   pname = "pandas";
-  version = "0.20.1";
-  name = "${pname}-${version}";
+  version = "0.23.1";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "42707365577ef69f7c9c168ddcf045df2957595a9ee71bc13c7997eecb96b190";
+    sha256 = "50b52af2af2e15f4aeb2fe196da073a8c131fa02e433e105d95ce40016df5690";
   };
 
   LC_ALL = "en_US.UTF-8";
-  buildInputs = [ pytest glibcLocales ] ++ optional isDarwin libcxx;
+
+  checkInputs = [ pytest glibcLocales moto ];
+
+  buildInputs = [] ++ optional isDarwin libcxx;
   propagatedBuildInputs = [
     cython
     dateutil
@@ -64,6 +68,24 @@ in buildPythonPackage rec {
                 "['pandas/src/klib', 'pandas/src', '$cpp_sdk']"
   '';
 
+
+  disabledTests = stdenv.lib.concatMapStringsSep " and " (s: "not " + s) ([
+    # since dateutil 0.6.0 the following fails: test_fallback_plural, test_ambiguous_flags, test_ambiguous_compat
+    # was supposed to be solved by https://github.com/dateutil/dateutil/issues/321, but is not the case
+    "test_fallback_plural"
+    "test_ambiguous_flags"
+    "test_ambiguous_compat"
+    # Locale-related
+    "test_names"
+    "test_dt_accessor_datetime_name_accessors"
+    "test_datetime_name_accessors"
+    # Can't import from test folder
+    "test_oo_optimizable"
+  ] ++ optionals isDarwin [
+    "test_locale"
+    "test_clipboard"
+  ]);
+
   checkPhase = ''
     runHook preCheck
   ''
@@ -76,8 +98,7 @@ in buildPythonPackage rec {
     chmod a+x pbcopy pbpaste
     export PATH=$(pwd):$PATH
   '' + ''
-    py.test $out/${python.sitePackages}/pandas --skip-slow --skip-network \
-      ${if isDarwin then "-k 'not test_locale and not test_clipboard'" else ""}
+    py.test $out/${python.sitePackages}/pandas --skip-slow --skip-network -k "$disabledTests"
     runHook postCheck
   '';
 
@@ -85,7 +106,7 @@ in buildPythonPackage rec {
     # https://github.com/pandas-dev/pandas/issues/14866
     # pandas devs are no longer testing i686 so safer to assume it's broken
     broken = stdenv.isi686;
-    homepage = "http://pandas.pydata.org/";
+    homepage = http://pandas.pydata.org/;
     description = "Python Data Analysis Library";
     license = stdenv.lib.licenses.bsd3;
     maintainers = with stdenv.lib.maintainers; [ raskin fridh knedlsepp ];

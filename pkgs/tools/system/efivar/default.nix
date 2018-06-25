@@ -2,27 +2,27 @@
 
 stdenv.mkDerivation rec {
   name = "efivar-${version}";
-  version = "30";
+  version = "36";
+
+  outputs = [ "bin" "out" "dev" "man" ];
 
   src = fetchFromGitHub {
     owner = "rhinstaller";
     repo = "efivar";
     rev = version;
-    sha256 = "1pghj019qr7qpqd9rxfhsr1hm3s0w1hd5cdndpl07vhys8hy4a8a";
+    sha256 = "0r39kx6sqgpk8rz19g1sil4dp7r82d5g1wlkbw1czwas95s50y7n";
   };
 
   nativeBuildInputs = [ pkgconfig ];
   buildInputs = [ popt ];
 
-  postPatch = ''
-     substituteInPlace src/Makefile --replace "-static" ""
-  '';
-
-  installFlags = [
+  makeFlags = [
+    "prefix=$(out)"
     "libdir=$(out)/lib"
-    "mandir=$(out)/share/man"
-    "includedir=$(out)/include"
-    "bindir=$(out)/bin"
+    "bindir=$(bin)/bin"
+    "mandir=$(man)/share/man"
+    "includedir=$(dev)/include"
+    "PCDIR=$(dev)/lib/pkgconfig"
   ];
 
   meta = with stdenv.lib; {

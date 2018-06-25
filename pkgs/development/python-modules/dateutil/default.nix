@@ -1,19 +1,19 @@
-{ stdenv, buildPythonPackage, fetchurl, six }:
+{ stdenv, buildPythonPackage, fetchPypi, six, setuptools_scm }:
 buildPythonPackage rec {
-  pname = "dateutil";
   name = "${pname}-${version}";
-  version = "2.6.0";
+  pname = "python-dateutil";
+  version = "2.7.3";
 
-  src = fetchurl {
-    url = "mirror://pypi/p/python-dateutil/python-${name}.tar.gz";
-    sha256 = "1lhq0hxjc3cfha101q02ld5ijlpfyjn2w1yh7wvpiy367pgzi8k2";
+  src = fetchPypi {
+    inherit pname version;
+    sha256 = "e27001de32f627c22380a688bcc43ce83504a7bc5da472209b4c70f02829f0b8";
   };
 
-  propagatedBuildInputs = [ six ];
+  propagatedBuildInputs = [ six setuptools_scm ];
 
   meta = with stdenv.lib; {
     description = "Powerful extensions to the standard datetime module";
-    homepage = http://pypi.python.org/pypi/python-dateutil;
+    homepage = https://pypi.python.org/pypi/python-dateutil;
     license = "BSD-style";
   };
 }

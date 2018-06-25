@@ -24,7 +24,11 @@ let
 
   kernel = config.boot.kernelPackages;
 
-  packages = if config.boot.zfs.enableUnstable then {
+  packages = if config.boot.zfs.enableLegacyCrypto then {
+    spl = kernel.splLegacyCrypto;
+    zfs = kernel.zfsLegacyCrypto;
+    zfsUser = pkgs.zfsLegacyCrypto;
+  } else if config.boot.zfs.enableUnstable then {
     spl = kernel.splUnstable;
     zfs = kernel.zfsUnstable;
     zfsUser = pkgs.zfsUnstable;
@@ -72,7 +76,28 @@ in
           version will have already passed an extensive test suite, but it is
           more likely to hit an undiscovered bug compared to running a released
           version of ZFS on Linux.
-        '';
+          '';
+      };
+
+      enableLegacyCrypto = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Enabling this option will allow you to continue to use the old format for
+          encrypted datasets. With the inclusion of stability patches the format of
+          encrypted datasets has changed. They can still be accessed and mounted but
+          in read-only mode mounted. It is highly recommended to convert them to
+          the new format.
+
+          This option is only for convenience to people that cannot convert their
+          datasets to the new format yet and it will be removed in due time.
+
+          For migration strategies from old format to this new one, check the Wiki:
+          https://nixos.wiki/wiki/NixOS_on_ZFS#Encrypted_Dataset_Format_Change
+
+          See https://github.com/zfsonlinux/zfs/pull/6864 for more details about
+          the stability patches.
+          '';
       };
 
       extraPools = mkOption {
@@ -140,6 +165,17 @@ in
           this once.
         '';
       };
+
+      requestEncryptionCredentials = mkOption {
+        type = types.bool;
+        default = config.boot.zfs.enableUnstable;
+        description = ''
+          Request encryption keys or passwords for all encrypted datasets on import.
+
+          Dataset encryption is only supported in zfsUnstable at the moment.
+        '';
+      };
+
     };
 
     services.zfs.autoSnapshot = {
@@ -257,13 +293,19 @@ in
       assertions = [
         {
           assertion = config.networking.hostId != null;
-          message = "ZFS requires config.networking.hostId to be set";
+          message = "ZFS requires networking.hostId to be set";
         }
         {
           assertion = !cfgZfs.forceImportAll || cfgZfs.forceImportRoot;
           message = "If you enable boot.zfs.forceImportAll, you must also enable boot.zfs.forceImportRoot";
         }
+        {
+          assertion = cfgZfs.requestEncryptionCredentials -> cfgZfs.enableUnstable;
+          message = "This feature is only available for zfs unstable. Set the NixOS option boot.zfs.enableUnstable.";
+        }
       ];
+
+      virtualisation.lxd.zfsSupport = true;
 
       boot = {
         kernelModules = [ "spl" "zfs" ] ;
@@ -306,6 +348,9 @@ in
             done
             echo
             if [[ -n "$msg" ]]; then echo "$msg"; fi
+            ${lib.optionalString cfgZfs.requestEncryptionCredentials ''
+              zfs load-key -a
+            ''}
         '') rootPools));
       };
 
@@ -358,6 +403,9 @@ in
           nameValuePair "zfs-sync-${pool}" {
             description = "Sync ZFS pool \"${pool}\"";
             wantedBy = [ "shutdown.target" ];
+            unitConfig = {
+              DefaultDependencies = false;
+            };
             serviceConfig = {
               Type = "oneshot";
               RemainAfterExit = true;
@@ -366,12 +414,15 @@ in
               ${packages.zfsUser}/sbin/zfs set nixos:shutdown-time="$(date)" "${pool}"
             '';
           };
+        createZfsService = serv:
+          nameValuePair serv {
+            after = [ "systemd-modules-load.service" ];
+            wantedBy = [ "zfs.target" ];
+          };
 
-      in listToAttrs (map createImportService dataPools ++ map createSyncService allPools) // {
-        "zfs-mount" = { after = [ "systemd-modules-load.service" ]; };
-        "zfs-share" = { after = [ "systemd-modules-load.service" ]; };
-        "zfs-zed" = { after = [ "systemd-modules-load.service" ]; };
-      };
+      in listToAttrs (map createImportService dataPools ++
+                      map createSyncService allPools ++
+                      map createZfsService [ "zfs-mount" "zfs-share" "zfs-zed" ]);
 
       systemd.targets."zfs-import" =
         let
@@ -380,6 +431,7 @@ in
           {
             requires = services;
             after = services;
+            wantedBy = [ "zfs.target" ];
           };
 
       systemd.targets."zfs".wantedBy = [ "multi-user.target" ];
@@ -409,7 +461,7 @@ in
                               }) snapshotNames);
 
       systemd.timers = let
-                         timer = name: if name == "frequent" then "*:15,30,45" else name;
+                         timer = name: if name == "frequent" then "*:0,15,30,45" else name;
                        in builtins.listToAttrs (map (snapName:
                             {
                               name = "zfs-snapshot-${snapName}";

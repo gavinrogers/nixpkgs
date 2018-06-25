@@ -1,11 +1,11 @@
 { fetchurl, fetchpatch, stdenv }:
 
 stdenv.mkDerivation rec {
-  name = "gsl-2.3";
+  name = "gsl-2.5";
 
   src = fetchurl {
     url = "mirror://gnu/gsl/${name}.tar.gz";
-    sha256 = "1yxdzqjwmi2aid650fa9zyr8llw069x7lm489wx9nnfdi6vh09an";
+    sha256 = "1395y9hlhqadn5g9j8q22224fds5sd92jxi9czfavjj24myasq04";
   };
 
   patches = [
@@ -13,7 +13,8 @@ stdenv.mkDerivation rec {
     ./disable-fma.patch # http://lists.gnu.org/archive/html/bug-gsl/2011-11/msg00019.html
   ];
 
-  doCheck = stdenv.system != "i686-linux"; # https://lists.gnu.org/archive/html/bug-gsl/2015-11/msg00012.html
+  # https://lists.gnu.org/archive/html/bug-gsl/2015-11/msg00012.html
+  doCheck = stdenv.system != "i686-linux" && stdenv.system != "aarch64-linux";
 
   meta = {
     description = "The GNU Scientific Library, a large numerical library";

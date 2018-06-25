@@ -1,16 +1,16 @@
-{ stdenv, fetchFromGitHub, cmake, pkgconfig, wrapGAppsHook
-, glib, gtk3, gettext, libxkbfile, libgnome_keyring, libX11
+{ stdenv, fetchFromGitLab, cmake, pkgconfig, wrapGAppsHook
+, glib, gtk3, gettext, libxkbfile, libgnome-keyring, libX11
 , freerdp, libssh, libgcrypt, gnutls, makeDesktopItem
 , pcre, webkitgtk, libdbusmenu-gtk3, libappindicator-gtk3
 , libvncserver, libpthreadstubs, libXdmcp, libxkbcommon
-, libsecret, spice_protocol, spice_gtk, epoxy, at_spi2_core
-, openssl, gsettings_desktop_schemas
+, libsecret, spice-protocol, spice-gtk, epoxy, at-spi2-core
+, openssl, gsettings-desktop-schemas, json-glib
 # The themes here are soft dependencies; only icons are missing without them.
-, hicolor_icon_theme, adwaita-icon-theme
+, hicolor-icon-theme, adwaita-icon-theme
 }:
 
 let
-  version = "1.2.0-rcgit.17";
+  version = "1.2.30.1";
 
   desktopItem = makeDesktopItem {
     name = "remmina";
@@ -25,20 +25,21 @@ let
 in stdenv.mkDerivation {
   name = "remmina-${version}";
 
-  src = fetchFromGitHub {
-    owner  = "FreeRDP";
+  src = fetchFromGitLab {
+    owner  = "Remmina";
     repo   = "Remmina";
     rev    = "v${version}";
-    sha256 = "1vfg8sfpj83ircp7ny6xsbn2ba5xbp3xrdl5wwyfcg1zrpdmi7f1";
+    sha256 = "1jz20yv84a8m9gm9fsz0jii8ag90v1scmbkkx9gk38ax5il7ilvn";
   };
 
-  buildInputs = [ cmake pkgconfig wrapGAppsHook gsettings_desktop_schemas
-                  glib gtk3 gettext libxkbfile libgnome_keyring libX11
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ cmake wrapGAppsHook gsettings-desktop-schemas
+                  glib gtk3 gettext libxkbfile libgnome-keyring libX11
                   freerdp libssh libgcrypt gnutls
                   pcre webkitgtk libdbusmenu-gtk3 libappindicator-gtk3
                   libvncserver libpthreadstubs libXdmcp libxkbcommon
-                  libsecret spice_protocol spice_gtk epoxy at_spi2_core
-                  openssl hicolor_icon_theme adwaita-icon-theme ];
+                  libsecret spice-protocol spice-gtk epoxy at-spi2-core
+                  openssl hicolor-icon-theme adwaita-icon-theme json-glib ];
 
   cmakeFlags = [
     "-DWITH_VTE=OFF"
@@ -63,9 +64,9 @@ in stdenv.mkDerivation {
 
   meta = with stdenv.lib; {
     license = stdenv.lib.licenses.gpl2;
-    homepage = "http://remmina.sourceforge.net/";
+    homepage = https://gitlab.com/Remmina/Remmina;
     description = "Remote desktop client written in GTK+";
-    maintainers = [];
+    maintainers = with maintainers; [ melsigl ryantm ];
     platforms = platforms.linux;
   };
 }

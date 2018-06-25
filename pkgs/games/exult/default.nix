@@ -26,7 +26,8 @@ stdenv.mkDerivation rec {
       ./arch.patch
     ];
 
-  buildInputs = [ pkgconfig SDL libogg libvorbis zlib unzip ];
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ SDL libogg libvorbis zlib unzip ];
 
   enableParallelBuilding = true;
 
@@ -44,5 +45,6 @@ stdenv.mkDerivation rec {
     description = "A reimplementation of the Ultima VII game engine";
     maintainers = [ stdenv.lib.maintainers.eelco ];
     platforms = stdenv.lib.platforms.unix;
+    hydraPlatforms = stdenv.lib.platforms.linux; # darwin times out
   };
 }

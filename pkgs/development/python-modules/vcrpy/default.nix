@@ -16,12 +16,12 @@
 
 buildPythonPackage rec {
   pname = "vcrpy";
-  version = "1.11.0";
+  version = "1.12.0";
   name = "${pname}-${version}";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "beb30de89c3618482ea76662b4135d48fef7417589df49c303b2e85db40c9705";
+    sha256 = "13c6a835a6dc1ac96d7e6cae03587525eb260d7a46c6e5dd7a25416655eecb3a";
   };
 
   checkInputs = [

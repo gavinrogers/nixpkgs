@@ -4,11 +4,11 @@ with stdenv.lib;
 
 stdenv.mkDerivation rec {
   name = "neo4j-${version}";
-  version = "3.1.2";
+  version = "3.4.1";
 
   src = fetchurl {
-    url = "http://dist.neo4j.org/neo4j-community-${version}-unix.tar.gz";
-    sha256 = "0kvbsm9mjwqyl3q2myif28a0f11i4rfq3hik07w9cdnrwyd75s40";
+    url = "https://neo4j.com/artifact.php?name=neo4j-community-${version}-unix.tar.gz";
+    sha256 = "1hgpgkmz0rgdppk1rl41017369qp9lfbrdk7j3qc5dq54x8rxbjp";
   };
 
   buildInputs = [ makeWrapper jre8 which gawk ];
@@ -29,7 +29,7 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "A highly scalable, robust (fully ACID) native graph database";
-    homepage = "http://www.neo4j.org/";
+    homepage = http://www.neo4j.org/;
     license = licenses.gpl3;
 
     maintainers = [ maintainers.offline ];

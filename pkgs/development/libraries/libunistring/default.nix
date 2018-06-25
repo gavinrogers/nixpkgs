@@ -1,14 +1,13 @@
 { fetchurl, stdenv, libiconv }:
 
 stdenv.mkDerivation rec {
-  name = "libunistring-0.9.7";
+  name = "libunistring-${version}";
+  version = "0.9.10";
 
   src = fetchurl {
     url = "mirror://gnu/libunistring/${name}.tar.gz";
-    sha256 = "1ra1baz2187kbw9im47g6kqb5mx9plq703mkjxaval8rxv5q3q4w";
+    sha256 = "02v17za10mxnj095x4pvm80jxyqwk93kailfc2j8xa1r6crmnbm8";
   };
-
-  patches = stdenv.lib.optional stdenv.isDarwin [ ./clang.patch ];
 
   outputs = [ "out" "dev" "info" "doc" ];
 
@@ -18,9 +17,9 @@ stdenv.mkDerivation rec {
     "--with-libiconv-prefix=${libiconv}"
   ];
 
-  # XXX: There are test failures on non-GNU systems, see
-  # http://lists.gnu.org/archive/html/bug-libunistring/2010-02/msg00004.html .
-  doCheck = stdenv ? glibc;
+  doCheck = true;
+
+  enableParallelBuilding = true;
 
   meta = {
     homepage = http://www.gnu.org/software/libunistring/;

@@ -1,4 +1,6 @@
-{ stdenv, fetchurl, pkgconfig, nspr, perl, python2, zip, libffi, readline }:
+{ stdenv, fetchurl, pkgconfig, nspr, perl, python2, zip, libffi
+, enableReadline ? (!stdenv.isDarwin), readline
+, libobjc }:
 
 stdenv.mkDerivation rec {
   version = "17.0.0";
@@ -13,9 +15,22 @@ stdenv.mkDerivation rec {
 
   propagatedBuildInputs = [ nspr ];
 
-  buildInputs = [ pkgconfig perl python2 zip libffi readline ];
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ perl python2 zip libffi readline ]
+             ++ stdenv.lib.optional enableReadline readline
+             ++ stdenv.lib.optional stdenv.isDarwin libobjc;
 
   postUnpack = "sourceRoot=\${sourceRoot}/js/src";
+
+  patches = [
+    (fetchurl {
+      name = "jsoptparse-gcc7.patch";
+      url = "https://src.fedoraproject.org/cgit/rpms/mozjs17.git/plain/"
+          + "mozjs17.0.0-gcc7.patch?id=43b846629a299f";
+      sha256 = "17plyaq0jwf9wli4zlgvh4ri3zyk6nj1fiakh3wnd37nsl90raf9";
+    })
+  ];
+  patchFlags = "-p3";
 
   postPatch = ''
     # Fixes an issue with version detection under perl 5.22.x
@@ -37,7 +52,7 @@ stdenv.mkDerivation rec {
     "--enable-threadsafe"
     "--with-system-nspr"
     "--with-system-ffi"
-    "--enable-readline"
+    (if enableReadline then "--enable-readline" else "--disable-readline")
   ];
 
   # hack around a make problem, see https://github.com/NixOS/nixpkgs/issues/1279#issuecomment-29547393
@@ -53,6 +68,7 @@ stdenv.mkDerivation rec {
     # https://lists.fedoraproject.org/pipermail/scm-commits/Week-of-Mon-20130617/1041155.html
     echo -e '#!${stdenv.shell}\nexit 0' > config/find_vanilla_new_calls
 
+  '' + stdenv.lib.optionalString stdenv.isLinux ''
     paxmark m shell/js17
     paxmark mr jsapi-tests/jsapi-tests
   '';
@@ -67,7 +83,6 @@ stdenv.mkDerivation rec {
     homepage = https://developer.mozilla.org/en/SpiderMonkey;
     # TODO: MPL/GPL/LGPL tri-license.
     maintainers = [ maintainers.goibhniu ];
-    platforms = platforms.linux;
+    platforms = platforms.unix;
   };
 }
-

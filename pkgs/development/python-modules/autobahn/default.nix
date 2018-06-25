@@ -6,11 +6,11 @@
 buildPythonPackage rec {
   name = "${pname}-${version}";
   pname = "autobahn";
-  version = "17.5.1";
+  version = "18.6.1";
 
   src = fetchurl {
     url = "mirror://pypi/a/${pname}/${name}.tar.gz";
-    sha256 = "0p2xx20g0rj6pnp4h3231mn8zk4ag8msv69f93gai2hzl5vglcia";
+    sha256 = "2f41bfc512ec482044fa8cfa74182118dedd87e03b3494472d9ff1b5a1e27d24";
   };
 
   # Upstream claim python2 support, but tests require pytest-asyncio which
@@ -22,12 +22,12 @@ buildPythonPackage rec {
     (stdenv.lib.optionals (!isPy3k) [ trollius futures ]);
 
   checkPhase = ''
-    py.test $out
+    USE_TWISTED=true py.test $out
   '';
 
   meta = with stdenv.lib; {
     description = "WebSocket and WAMP in Python for Twisted and asyncio.";
-    homepage    = "http://crossbar.io/autobahn";
+    homepage    = "https://crossbar.io/autobahn";
     license     = licenses.mit;
     maintainers = with maintainers; [ nand0p ];
     platforms   = platforms.all;

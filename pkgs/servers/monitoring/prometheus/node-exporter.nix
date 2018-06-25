@@ -2,7 +2,7 @@
 
 buildGoPackage rec {
   name = "node_exporter-${version}";
-  version = "0.14.0";
+  version = "0.16.0";
   rev = "v${version}";
 
   goPackagePath = "github.com/prometheus/node_exporter";
@@ -11,10 +11,10 @@ buildGoPackage rec {
     inherit rev;
     owner = "prometheus";
     repo = "node_exporter";
-    sha256 = "0rm43jjqv7crfahl973swi4warqmqnmv740cg800yvzvnlp37kl4";
+    sha256 = "0rm6ahccgr1djpwvsa3p1kfal3mpy4a6g5w974pra84gk3krli5a";
   };
 
-  # FIXME: megacli test fails
+  # FIXME: tests fail due to read-only nix store
   doCheck = false;
 
   meta = with stdenv.lib; {

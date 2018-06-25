@@ -1,14 +1,14 @@
-{ stdenv, fetchurl, kubernetes }:
+{ stdenv, fetchurl, kubectl }:
 let
-  arch = if stdenv.isLinux
+  isLinux = stdenv.isLinux;
+  arch = if isLinux
          then "linux-amd64"
          else "darwin-amd64";
-  checksum = if stdenv.isLinux
-             then "0vjkcilxzwvkgcczcbq58nl2j17ddqiysxm5yl13agnmxzvxw6r2"
-             else "1ga9gxzji48vhbaa0pkxd03h89zgjsbikbki9xla1qbvyvqjnw5g";
-
+  checksum = if isLinux
+             then "1fk6w6sajdi6iphxrzi9r7xfyaf923nxcqnl01s6x3f611fjvbjn"
+             else "1jzgy641hm3khj0bakfbr5wd5zl3s7w5jb622fjv2jxwmnv7dxiv";
   pname = "helm";
-  version = "2.4.1";
+  version = "2.9.1";
 in
 stdenv.mkDerivation {
   name = "${pname}-${version}";
@@ -22,7 +22,7 @@ stdenv.mkDerivation {
 
   buildInputs = [ ];
 
-  propagatedBuildInputs = [ kubernetes ];
+  propagatedBuildInputs = [ kubectl ];
 
   phases = [ "buildPhase" "installPhase" ];
 
@@ -45,6 +45,6 @@ stdenv.mkDerivation {
     description = "A package manager for kubernetes";
     license = licenses.asl20;
     maintainers = [ maintainers.rlupton20 ];
-    platforms = platforms.linux ++ platforms.darwin;
+    platforms = [ "x86_64-linux" ] ++ platforms.darwin;
   };
 }

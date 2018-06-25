@@ -1,25 +1,36 @@
-{ stdenv, buildPythonPackage, fetchurl, isPy26, argparse, hypothesis, py }:
+{ stdenv, buildPythonPackage, fetchPypi, isPy26, argparse, attrs, hypothesis, py
+, setuptools_scm, setuptools, six, pluggy, funcsigs, isPy3k, more-itertools
+, atomicwrites, mock
+}:
 buildPythonPackage rec {
-  version = "3.0.7";
+  version = "3.6.2";
   pname = "pytest";
-  name = "${pname}-${version}";
 
   preCheck = ''
     # don't test bash builtins
     rm testing/test_argcomplete.py
   '';
 
-  src = fetchurl {
-    url = "mirror://pypi/p/pytest/${name}.tar.gz";
-    sha256 = "b70696ebd1a5e6b627e7e3ac1365a4bc60aaf3495e843c1e70448966c5224cab";
+  src = fetchPypi {
+    inherit pname version;
+    sha256 = "8ea01fc4fcc8e1b1e305252b4bc80a1528019ab99fd3b88666c9dc38d754406c";
   };
 
-  buildInputs = [ hypothesis ];
-  propagatedBuildInputs = [ py ]
+  checkInputs = [ hypothesis mock ];
+  buildInputs = [ setuptools_scm ];
+  propagatedBuildInputs = [ attrs py setuptools six pluggy more-itertools atomicwrites]
+    ++ (stdenv.lib.optional (!isPy3k) funcsigs)
     ++ (stdenv.lib.optional isPy26 argparse);
+
+  checkPhase = ''
+    runHook preCheck
+    $out/bin/py.test -x testing/
+    runHook postCheck
+  '';
 
   meta = with stdenv.lib; {
     maintainers = with maintainers; [ domenkozar lovek323 madjar lsix ];
     platforms = platforms.unix;
+    description = "Framework for writing tests";
   };
 }

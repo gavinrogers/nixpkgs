@@ -1,9 +1,9 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, openssl, ppp }:
+{ stdenv, fetchFromGitHub, autoreconfHook, openssl, ppp, pkgconfig }:
 
 with stdenv.lib;
 
 let repo = "openfortivpn";
-    version = "1.2.0";
+    version = "1.7.1";
 
 in stdenv.mkDerivation {
   name = "${repo}-${version}";
@@ -12,10 +12,11 @@ in stdenv.mkDerivation {
     owner = "adrienverge";
     inherit repo;
     rev = "v${version}";
-    sha256 = "1a1l9f6zivfyxg9g2x7kzkvcyh84s7l6v0kimihhrd19zl0m41jn";
+    sha256 = "01nsgmmh72qk0aq2zdjh8qqn256mmvz1w2gl0wi7g29d82y2hdfm";
   };
 
-  buildInputs = [ openssl ppp autoreconfHook ];
+  nativeBuildInputs = [ autoreconfHook pkgconfig ];
+  buildInputs = [ openssl ppp ];
 
   NIX_CFLAGS_COMPILE = "-Wno-error=unused-function";
 

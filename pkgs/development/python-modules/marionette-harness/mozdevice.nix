@@ -8,19 +8,19 @@
 
 buildPythonPackage rec {
   pname = "mozdevice";
-  version = "0.50";
+  version = "1.0.0";
   name = "${pname}-${version}";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0cfxzhfxdphlzj80vkd3h7m0mg5w7zhb8h6f5lmybliqdiv9vz20";
+    sha256 = "c3c50219127e36c171f84b2427e8fcf3a85457f336559aead9770b2a27fbc4b6";
   };
 
   propagatedBuildInputs = [ moznetwork mozprocess ];
 
   meta = {
     description = "Mozilla-authored device management";
-    homepage = "https://wiki.mozilla.org/Auto-tools/Projects/Mozbase";
+    homepage = https://wiki.mozilla.org/Auto-tools/Projects/Mozbase;
     license = lib.licenses.mpl20;
     maintainers = with lib.maintainers; [ raskin ];
   };

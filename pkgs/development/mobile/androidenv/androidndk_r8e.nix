@@ -3,8 +3,6 @@
 , platformTools
 }:
 
-assert stdenv.isLinux;
-
 stdenv.mkDerivation rec {
   name = "android-ndk-r8e";
 
@@ -21,7 +19,7 @@ stdenv.mkDerivation rec {
 
   phases = "buildPhase";
 
-  buildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ makeWrapper ];
 
   buildCommand = let
     bin_path = "$out/bin";
@@ -51,7 +49,12 @@ stdenv.mkDerivation rec {
         -d $out/libexec/${name} < ${ ./make-standalone-toolchain_r8e.patch }
     cd ${pkg_path}
 
-    find $out \( \
+    # Steps to reduce output size
+    rm -rf docs sources tests
+    # We only support cross compiling with gcc for now
+    rm -rf toolchains/*-clang* toolchains/llvm-*
+
+    find ${pkg_path}/toolchains \( \
         \( -type f -a -name "*.so*" \) -o \
         \( -type f -a -perm -0100 \) \
         \) -exec patchelf --set-interpreter ${stdenv.cc.libc.out}/lib/ld-*so.? \
@@ -64,17 +67,17 @@ stdenv.mkDerivation rec {
     sed -i -e ${sed_script_2} ndk-which
     # a bash script
     patchShebangs ndk-which
+    # wrap
+    for i in ndk-build ndk-gdb ndk-gdb-py ndk-which
+    do
+        wrapProgram "$(pwd)/$i" --prefix PATH : "${runtime_paths}"
+    done
     # make some executables available in PATH
     mkdir -pv ${bin_path}
     for i in \
         ndk-build ndk-depends ndk-gdb ndk-gdb-py ndk-gdb.py ndk-stack ndk-which
     do
         ln -sf ${pkg_path}/$i ${bin_path}/$i
-    done
-    # wrap
-    for i in ndk-build ndk-gdb ndk-gdb-py ndk-which
-    do
-        wrapProgram "${bin_path}/$i" --prefix PATH : "${runtime_paths}"
     done
   '';
 }

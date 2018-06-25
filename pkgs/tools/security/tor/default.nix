@@ -1,16 +1,30 @@
 { stdenv, fetchurl, pkgconfig, libevent, openssl, zlib, torsocks
 , libseccomp, systemd, libcap
+
+# for update.nix
+, writeScript
+, runCommand
+, common-updater-scripts
+, bash
+, coreutils
+, curl
+, gnugrep
+, gnupg
+, gnused
+, nix
 }:
 
 stdenv.mkDerivation rec {
-  name = "tor-0.3.0.7";
+  name = "tor-0.3.3.7";
 
   src = fetchurl {
     url = "https://dist.torproject.org/${name}.tar.gz";
-    sha256 = "00kxa83bn0axh7479fynp6r8znq5wy26kvb8ghixgjpkir2c8h4n";
+    sha256 = "036ybfvldj7yfci9ipjki8smpzyxdg8c5r12bghc9yxdqh9basza";
   };
 
   outputs = [ "out" "geoip" ];
+
+  enableParallelBuilding = true;
 
   nativeBuildInputs = [ pkgconfig ];
   buildInputs = [ libevent openssl zlib ] ++
@@ -31,6 +45,22 @@ stdenv.mkDerivation rec {
   '';
 
   doCheck = true;
+
+  passthru.updateScript = import ./update.nix {
+    inherit (stdenv) lib;
+    inherit
+      writeScript
+      runCommand
+      common-updater-scripts
+      bash
+      coreutils
+      curl
+      gnupg
+      gnugrep
+      gnused
+      nix
+    ;
+  };
 
   meta = with stdenv.lib; {
     homepage = https://www.torproject.org/;

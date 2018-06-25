@@ -9,12 +9,12 @@
 
 buildPythonPackage rec {
   pname = "guessit";
-  version = "2.1.2";
+  version = "3.0.0";
   name = "${pname}-${version}";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "9f7e12b7f2215548284631a20aae6fc009c8af2bb8cc5d5e5e339cb15361dd95";
+    sha256 = "bf17e78783cf13bf903750770de4c3bb6c9ca89baafedb1612794660b6ebe32b";
   };
 
   # Tests require more packages.
@@ -25,7 +25,7 @@ buildPythonPackage rec {
   ];
 
   meta = {
-    homepage = http://pypi.python.org/pypi/guessit;
+    homepage = https://pypi.python.org/pypi/guessit;
     license = lib.licenses.lgpl3;
     description = "A library for guessing information from video files";
   };

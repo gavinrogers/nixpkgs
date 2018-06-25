@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, xar, xz, cpio, pkgs, python }:
+{ stdenv, fetchurl, xar, xz, cpio, pkgs, python, lib }:
 
 let
   # TODO: make this available to other packages and generalize the unpacking a bit
@@ -27,6 +27,7 @@ let
     buildInputs = [ xar xz cpio python ];
 
     phases = [ "unpackPhase" "installPhase" "fixupPhase" ];
+    outputs = [ "out" "dev" "man" ];
 
     unpackPhase = ''
       xar -x -f $src
@@ -87,13 +88,13 @@ let
         # ApplicationServices in the 10.9 SDK
         local isChild
 
-        if [ -d "${sdk}/Library/Frameworks/$path/Versions/$current/Headers" ]; then
+        if [ -d "${sdk.out}/Library/Frameworks/$path/Versions/$current/Headers" ]; then
           isChild=1
-          cp -R "${sdk}/Library/Frameworks/$path/Versions/$current/Headers" .
+          cp -R "${sdk.out}/Library/Frameworks/$path/Versions/$current/Headers" .
         else
           isChild=0
           current="$(readlink "/System/Library/Frameworks/$name.framework/Versions/Current")"
-          cp -R "${sdk}/Library/Frameworks/$name.framework/Versions/$current/Headers" .
+          cp -R "${sdk.out}/Library/Frameworks/$name.framework/Versions/$current/Headers" .
         fi
         ln -s -L "/System/Library/Frameworks/$path/Versions/$current/$name"
         ln -s -L "/System/Library/Frameworks/$path/Versions/$current/Resources"
@@ -103,9 +104,9 @@ let
         fi
 
         if [ $isChild -eq 1 ]; then
-          pushd "${sdk}/Library/Frameworks/$path/Versions/$current" >/dev/null
+          pushd "${sdk.out}/Library/Frameworks/$path/Versions/$current" >/dev/null
         else
-          pushd "${sdk}/Library/Frameworks/$name.framework/Versions/$current" >/dev/null
+          pushd "${sdk.out}/Library/Frameworks/$name.framework/Versions/$current" >/dev/null
         fi
         local children=$(echo Frameworks/*.framework)
         if [ "$name" == "ApplicationServices" ]; then
@@ -134,12 +135,15 @@ let
     propagatedBuildInputs = deps;
 
     # don't use pure CF for dylibs that depend on frameworks
-    setupHook = ../../../build-support/setup-hooks/fix-darwin-frameworks.sh;
+    setupHook = ./framework-setup-hook.sh;
 
-    # allows building the symlink tree
-    __impureHostDeps = [ "/System/Library/Frameworks/${name}.framework" ];
-
-    __propagatedImpureHostDeps = stdenv.lib.optional (name != "Kernel") "/System/Library/Frameworks/${name}.framework/${name}";
+    # Not going to be more specific than this for now
+    __propagatedImpureHostDeps = stdenv.lib.optionals (name != "Kernel") [
+      # The setup-hook ensures that everyone uses the impure CoreFoundation who uses these SDK frameworks, so let's expose it
+      "/System/Library/Frameworks/CoreFoundation.framework"
+      "/System/Library/Frameworks/${name}.framework"
+      "/System/Library/Frameworks/${name}.framework/${name}"
+    ];
 
     meta = with stdenv.lib; {
       description = "Apple SDK framework ${name}";
@@ -156,8 +160,8 @@ in rec {
       installPhase = ''
         mkdir -p $out/include
         pushd $out/include >/dev/null
-        ln -s "${sdk}/include/xpc"
-        ln -s "${sdk}/include/launch.h"
+        ln -s "${lib.getDev sdk}/include/xpc"
+        ln -s "${lib.getDev sdk}/include/launch.h"
         popd >/dev/null
       '';
     };
@@ -175,7 +179,7 @@ in rec {
 
       installPhase = ''
         mkdir -p $out/include $out/lib
-        ln -s "${sdk}/include/Xplugin.h" $out/include/Xplugin.h
+        ln -s "${lib.getDev sdk}/include/Xplugin.h" $out/include/Xplugin.h
         ln -s "/usr/lib/libXplugin.1.dylib" $out/lib/libXplugin.dylib
       '';
     };
@@ -187,30 +191,43 @@ in rec {
       installPhase = ''
         mkdir -p $out/include
         pushd $out/include >/dev/null
-        ln -s "${sdk}/include/utmp.h"
-        ln -s "${sdk}/include/utmpx.h"
+        ln -s "${lib.getDev sdk}/include/utmp.h"
+        ln -s "${lib.getDev sdk}/include/utmpx.h"
         popd >/dev/null
       '';
     };
   };
 
   overrides = super: {
+    AppKit = stdenv.lib.overrideDerivation super.AppKit (drv: {
+      __propagatedImpureHostDeps = drv.__propagatedImpureHostDeps ++ [
+        "/System/Library/PrivateFrameworks/"
+      ];
+    });
+
+    CoreMedia = stdenv.lib.overrideDerivation super.CoreMedia (drv: {
+      __propagatedImpureHostDeps = drv.__propagatedImpureHostDeps ++ [
+        "/System/Library/Frameworks/CoreImage.framework"
+      ];
+    });
+
+    CoreMIDI = stdenv.lib.overrideDerivation super.CoreMIDI (drv: {
+      __propagatedImpureHostDeps = drv.__propagatedImpureHostDeps ++ [
+        "/System/Library/PrivateFrameworks/"
+      ];
+      setupHook = ./private-frameworks-setup-hook.sh;
+    });
+
+    Security = stdenv.lib.overrideDerivation super.Security (drv: {
+      setupHook = ./security-setup-hook.sh;
+    });
+
     QuartzCore = stdenv.lib.overrideDerivation super.QuartzCore (drv: {
       installPhase = drv.installPhase + ''
         f="$out/Library/Frameworks/QuartzCore.framework/Headers/CoreImage.h"
         substituteInPlace "$f" \
           --replace "QuartzCore/../Frameworks/CoreImage.framework/Headers" "CoreImage"
       '';
-    });
-
-    CoreServices = stdenv.lib.overrideDerivation super.CoreServices (drv: {
-      __propagatedSandboxProfile = drv.__propagatedSandboxProfile ++ [''
-        (allow mach-lookup (global-name "com.apple.CoreServices.coreservicesd"))
-      ''];
-    });
-
-    Security = stdenv.lib.overrideDerivation super.Security (drv: {
-      setupHook = ./security-setup-hook.sh;
     });
   };
 

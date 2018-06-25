@@ -1,31 +1,36 @@
-{ stdenv, fetchurl, cups, libssh, libXpm, nxproxy, openldap, makeWrapper, qt4 }:
+{ stdenv, fetchurl, cups, libssh, libXpm, nxproxy, openldap, openssh,
+makeWrapper, qtbase, qtsvg, qtx11extras, qttools, phonon }:
 
 stdenv.mkDerivation rec {
   name = "x2goclient-${version}";
-  version = "4.0.5.1";
+  version = "4.1.2.0";
 
   src = fetchurl {
     url = "http://code.x2go.org/releases/source/x2goclient/${name}.tar.gz";
-    sha256 = "04gdccqywas029a76k3r9zhr2mfn385i9r06cmi8mznxpczrhkl4";
+    sha256 = "1x1iiyszz6mbrnsqacxzclyx172djq865bw3y83ya7lc9j8a71zn";
   };
 
-  buildInputs = [ cups libssh libXpm nxproxy openldap qt4 ];
+  buildInputs = [ cups libssh libXpm nxproxy openldap openssh
+                  qtbase qtsvg qtx11extras qttools phonon ];
   nativeBuildInputs = [ makeWrapper ];
 
-  patchPhase = ''
+  patches = [ ./qt511.patch ];
+
+  postPatch = ''
      substituteInPlace Makefile \
-       --replace "lrelease-qt4" "${qt4}/bin/lrelease" \
-       --replace "qmake-qt4" "${qt4}/bin/qmake" \
+       --replace "SHELL=/bin/bash" "SHELL=$SHELL" \
+       --replace "lrelease-qt4" "${qttools.dev}/bin/lrelease" \
+       --replace "qmake-qt4" "${qtbase.dev}/bin/qmake" \
        --replace "-o root -g root" ""
   '';
 
-  makeFlags = [ "PREFIX=$(out)" "ETCDIR=$(out)/etc" ];
+  makeFlags = [ "PREFIX=$(out)" "ETCDIR=$(out)/etc" "build_client" "build_man" ];
 
   enableParallelBuilding = true;
 
   installTargets = [ "install_client" "install_man" ];
   postInstall = ''
-    wrapProgram "$out/bin/x2goclient" --suffix PATH : "${nxproxy}/bin";
+    wrapProgram "$out/bin/x2goclient" --suffix PATH : "${nxproxy}/bin:${openssh}/libexec";
   '';
 
   meta = with stdenv.lib; {
@@ -33,6 +38,5 @@ stdenv.mkDerivation rec {
     homepage = http://x2go.org/;
     license = licenses.gpl2;
     platforms = platforms.linux;
-    maintainers = with maintainers; [ nckx ];
   };
 }

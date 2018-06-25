@@ -3,13 +3,13 @@
 
 stdenv.mkDerivation ( rec {
   name = "ponyc-${version}";
-  version = "0.14.0";
+  version = "0.23.0";
 
   src = fetchFromGitHub {
     owner = "ponylang";
     repo = "ponyc";
     rev = version;
-    sha256 = "0zzr3mmjp7010d3jfly6lbwaib546praml97kgj92yixahnwz533";
+    sha256 = "1m0zvl30926652akyzpvy5m7jn35697d5mkg3xbn3yqwbsfk4yhk";
   };
 
   buildInputs = [ llvm makeWrapper which ];
@@ -69,8 +69,10 @@ stdenv.mkDerivation ( rec {
     + stdenv.lib.optionalString stdenv.isDarwin '' bits=64 ''
     + stdenv.lib.optionalString (stdenv.isDarwin && (!lto)) '' lto=no ''
     + '' install
-    mv $out/bin/ponyc $out/bin/ponyc.wrapped
-    makeWrapper $out/bin/ponyc.wrapped $out/bin/ponyc \
+
+    wrapProgram $out/bin/ponyc \
+      --prefix PATH ":" "${stdenv.cc}/bin" \
+      --set-default CC "$CC" \
       --prefix PONYPATH : "$out/lib" \
       --prefix PONYPATH : "${stdenv.lib.getLib pcre2}/lib" \
       --prefix PONYPATH : "${stdenv.lib.getLib libressl}/lib"
@@ -83,7 +85,7 @@ stdenv.mkDerivation ( rec {
     description = "Pony is an Object-oriented, actor-model, capabilities-secure, high performance programming language";
     homepage = http://www.ponylang.org;
     license = licenses.bsd2;
-    maintainers = with maintainers; [ doublec kamilchm ];
-    platforms = subtractLists platforms.i686 platforms.unix;
+    maintainers = with maintainers; [ doublec kamilchm patternspandemic ];
+    platforms = [ "x86_64-linux" "x86_64-darwin" ];
   };
 })
