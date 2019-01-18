@@ -1,17 +1,16 @@
-{ lib, fetchurl, buildPythonPackage, isPy3k }:
+{ lib, fetchPypi, buildPythonPackage, isPy3k }:
 
 buildPythonPackage rec {
-  version = "1.9";
+  version = "1.10";
   pname = "python-stdnum";
-  name = "${pname}-${version}";
   # Failing tests and dependency issue on Py3k
   disabled = isPy3k;
-  src = fetchurl {
-    url = "mirror://pypi/p/python-stdnum/${name}.tar.gz";
-    sha256 = "d587a520182f9d8aef7659cca429f4382881589c8883a0a55322b2f94970bdb3";
+  src = fetchPypi {
+    inherit pname version;
+    sha256 = "0prs63q8zdgwr5cxc5a43zvsm66l0gf9jk19qdf85m6isnp5186a";
   };
   meta = {
-    homepage = http://arthurdejong.org/python-stdnum/;
+    homepage = https://arthurdejong.org/python-stdnum/;
     description = "Python module to handle standardized numbers and codes";
     maintainers = with lib.maintainers; [ johbo ];
     license = lib.licenses.lgpl2Plus;

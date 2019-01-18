@@ -9,14 +9,14 @@
 }:
 
 stdenv.mkDerivation rec {
-  version = "0.7.21";
+  version = "0.7.23";
   name = "pynac-${version}";
 
   src = fetchFromGitHub {
     owner = "pynac";
     repo = "pynac";
     rev = "pynac-${version}";
-    sha256 = "072mdziyx52y0knxjf2hs6nab36bckkanp7g6ff6qiy4fm0v8q04";
+    sha256 = "02yhl8v9l6aj3wl6dk9iacz4hdv08i1d750rxpygjp43nlgvvb2h";
   };
 
   buildInputs = [
@@ -41,6 +41,7 @@ stdenv.mkDerivation rec {
       of the full GiNaC, and it is *only* meant to be used as a Python library.
     '';
     homepage    = http://pynac.org;
+    license = licenses.gpl3;
     maintainers = with maintainers; [ timokau ];
     platforms   = platforms.linux;
   };

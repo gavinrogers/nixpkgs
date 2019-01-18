@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, pkgconfig, libusb1, hwdata }:
+{ stdenv, fetchurl, substituteAll, autoreconfHook, pkgconfig, libusb1, hwdata }:
 
 stdenv.mkDerivation rec {
   name = "usbutils-010";
@@ -8,18 +8,20 @@ stdenv.mkDerivation rec {
     sha256 = "06aag4jfgsfjxk563xsp9ik9nadihmasrr37a1gb0vwqni5kdiv1";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
+  patches = [
+    (substituteAll {
+      src = ./fix-paths.patch;
+      inherit hwdata;
+    })
+  ];
+
+  nativeBuildInputs = [ autoreconfHook pkgconfig ];
   buildInputs = [ libusb1 ];
 
-  postInstall =
-    ''
-      substituteInPlace $out/bin/lsusb.py \
-        --replace /usr/share/usb.ids ${hwdata}/data/hwdata/usb.ids
-    '';
-
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://www.linux-usb.org/;
     description = "Tools for working with USB devices, such as lsusb";
-    platforms = stdenv.lib.platforms.linux;
+    license = licenses.gpl2Plus;
+    platforms = platforms.linux;
   };
 }

@@ -6,7 +6,7 @@ with lib;
     description = ''
       Periodic backups to create with Restic.
     '';
-    type = types.attrsOf (types.submodule ({ name, config, ... }: {
+    type = types.attrsOf (types.submodule ({ name, ... }: {
       options = {
         passwordFile = mkOption {
           type = types.str;
@@ -14,7 +14,16 @@ with lib;
             Read the repository password from a file.
           '';
           example = "/etc/nixos/restic-password";
+        };
 
+        s3CredentialsFile = mkOption {
+          type = with types; nullOr str;
+          default = null;
+          description = ''
+            file containing the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+            for an S3-hosted repository, in the format of an EnvironmentFile
+            as described by systemd.exec(5)
+          '';
         };
 
         repository = mkOption {
@@ -119,7 +128,6 @@ with lib;
       mapAttrs' (name: backup:
         let
           extraOptions = concatMapStrings (arg: " -o ${arg}") backup.extraOptions;
-          connectTo = elemAt (splitString ":" backup.repository) 1;
           resticCmd = "${pkgs.restic}/bin/restic${extraOptions}";
         in nameValuePair "restic-backups-${name}" ({
           environment = {
@@ -134,6 +142,8 @@ with lib;
             Type = "oneshot";
             ExecStart = "${resticCmd} backup ${concatStringsSep " " backup.extraBackupArgs} ${concatStringsSep " " backup.paths}";
             User = backup.user;
+          } // optionalAttrs (backup.s3CredentialsFile != null) {
+            EnvironmentFile = backup.s3CredentialsFile;
           };
         } // optionalAttrs backup.initialize {
           preStart = ''

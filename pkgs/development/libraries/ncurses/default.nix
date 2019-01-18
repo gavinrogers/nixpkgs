@@ -4,21 +4,24 @@
 , mouseSupport ? false
 , unicode ? true
 , enableStatic ? stdenv.hostPlatform.useAndroidPrebuilt
+, enableShared ? !enableStatic
 , withCxx ? !stdenv.hostPlatform.useAndroidPrebuilt
 
 , gpm
 
-, buildPlatform, hostPlatform
 , buildPackages
 }:
 
 stdenv.mkDerivation rec {
-  version = "6.1";
+  version = "6.1-20181027";
   name = "ncurses-${version}" + lib.optionalString (abiVersion == "5") "-abi5-compat";
 
   src = fetchurl {
-    url = "mirror://gnu/ncurses/ncurses-${version}.tar.gz";
-    sha256 = "05qdmbmrrn88ii9f66rkcmcyzp1kb1ymkx7g040lfkd1nkp7w1da";
+    urls = [
+      "https://invisible-mirror.net/archives/ncurses/current/ncurses-${version}.tgz"
+      "ftp://ftp.invisible-island.net/ncurses/current/ncurses-${version}.tgz"
+    ];
+    sha256 = "1xn6wpi22jc61158w4ifq6s1fvilhmsy1in2srn3plk8pm0d4902";
   };
 
   patches = lib.optional (!stdenv.cc.isClang) ./clang.patch;
@@ -27,14 +30,19 @@ stdenv.mkDerivation rec {
   setOutputFlags = false; # some aren't supported
 
   configureFlags = [
-    "--with-shared"
+    (lib.withFeature enableShared "shared")
     "--without-debug"
     "--enable-pc-files"
     "--enable-symlinks"
+    "--with-manpage-format=normal"
+    "--disable-stripping"
   ] ++ lib.optional unicode "--enable-widec"
-    ++ lib.optional enableStatic "--enable-static"
     ++ lib.optional (!withCxx) "--without-cxx"
-    ++ lib.optional (abiVersion == "5") "--with-abi-version=5";
+    ++ lib.optional (abiVersion == "5") "--with-abi-version=5"
+    ++ lib.optionals stdenv.hostPlatform.isWindows [
+      "--enable-sp-funcs"
+      "--enable-term-driver"
+    ];
 
   # Only the C compiler, and explicitly not C++ compiler needs this flag on solaris:
   CFLAGS = lib.optionalString stdenv.isSunOS "-D_XOPEN_SOURCE_EXTENDED";
@@ -42,7 +50,7 @@ stdenv.mkDerivation rec {
   depsBuildBuild = [ buildPackages.stdenv.cc ];
   nativeBuildInputs = [
     pkgconfig
-  ] ++ lib.optionals (buildPlatform != hostPlatform) [
+  ] ++ lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform) [
     buildPackages.ncurses
   ];
   buildInputs = lib.optional (mouseSupport && stdenv.isLinux) gpm;
@@ -109,6 +117,11 @@ stdenv.mkDerivation rec {
         for statictype in a dll.a la; do
           if [ -e "$out/lib/lib''${library}$suffix.$statictype" ]; then
             ln -svf lib''${library}$suffix.$statictype $out/lib/lib$library$newsuffix.$statictype
+            if [ "ncurses" = "$library" ]
+            then
+              # make libtinfo symlinks
+              ln -svf lib''${library}$suffix.$statictype $out/lib/libtinfo$newsuffix.$statictype
+            fi
           fi
         done
         ln -svf ''${library}$suffix.pc $dev/lib/pkgconfig/$library$newsuffix.pc
@@ -127,7 +140,7 @@ stdenv.mkDerivation rec {
     moveToOutput "bin/infotocap" "$out"
   '';
 
-  preFixup = lib.optionalString (!hostPlatform.isCygwin) ''
+  preFixup = lib.optionalString (!stdenv.hostPlatform.isCygwin && !enableStatic) ''
     rm "$out"/lib/*.a
   '';
 
@@ -148,7 +161,7 @@ stdenv.mkDerivation rec {
       ported to OS/2 Warp!
     '';
 
-    homepage = http://www.gnu.org/software/ncurses/;
+    homepage = https://www.gnu.org/software/ncurses/;
 
     license = lib.licenses.mit;
     platforms = lib.platforms.all;

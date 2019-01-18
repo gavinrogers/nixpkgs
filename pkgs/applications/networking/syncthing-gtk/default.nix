@@ -1,4 +1,7 @@
-{ stdenv, fetchFromGitHub, fetchpatch, libnotify, librsvg, darwin, psmisc, gtk3, libappindicator-gtk3, substituteAll, syncthing, wrapGAppsHook, gnome3, buildPythonApplication, dateutil, pyinotify, pygobject3, bcrypt, gobjectIntrospection }:
+{ stdenv, fetchFromGitHub, fetchpatch, libnotify, librsvg, killall
+, gtk3, libappindicator-gtk3, substituteAll, syncthing, wrapGAppsHook
+, gnome3, buildPythonApplication, dateutil, pyinotify, pygobject3
+, bcrypt, gobject-introspection }:
 
 buildPythonApplication rec {
   version = "0.9.4";
@@ -14,7 +17,7 @@ buildPythonApplication rec {
   nativeBuildInputs = [
     wrapGAppsHook
     # For setup hook populating GI_TYPELIB_PATH
-    gobjectIntrospection
+    gobject-introspection
   ];
 
   buildInputs = [
@@ -35,7 +38,7 @@ buildPythonApplication rec {
     })
     (substituteAll {
       src = ./paths.patch;
-      killall = "${if stdenv.isDarwin then darwin.shell_cmds else psmisc}/bin/killall";
+      killall = "${killall}/bin/killall";
       syncthing = "${syncthing}/bin/syncthing";
     })
   ];

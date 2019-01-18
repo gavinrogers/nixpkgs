@@ -13,7 +13,8 @@
 , systemd
 , enableProprietaryCodecs ? true
 , gn, darwin, openbsm
-, lib, stdenv # lib.optional, needsPax
+, ffmpeg ? null
+, lib, stdenv
 }:
 
 with stdenv.lib;
@@ -41,9 +42,8 @@ qtModule {
       ( cd src/3rdparty/chromium; patchShebangs . )
     ''
     # Patch Chromium build files
-    + ''
-      substituteInPlace ./src/3rdparty/chromium/build/common.gypi \
-        --replace /bin/echo ${coreutils}/bin/echo
+    + optionalString (builtins.compareVersions qtCompatVersion "5.12" < 0) ''
+      substituteInPlace ./src/3rdparty/chromium/build/common.gypi --replace /bin/echo ${coreutils}/bin/echo
       substituteInPlace ./src/3rdparty/chromium/v8/${if qt56 then "build" else "gypfiles"}/toolchain.gypi \
         --replace /bin/echo ${coreutils}/bin/echo
       substituteInPlace ./src/3rdparty/chromium/v8/${if qt56 then "build" else "gypfiles"}/standalone.gypi \
@@ -103,8 +103,6 @@ EOF
     # Apple has some secret stuff they don't share with OpenBSM
     substituteInPlace src/3rdparty/chromium/base/mac/mach_port_broker.mm \
       --replace "audit_token_to_pid(msg.trailer.msgh_audit)" "msg.trailer.msgh_audit.val[5]"
-    substituteInPlace src/3rdparty/chromium/sandbox/mac/bootstrap_sandbox.cc \
-      --replace "audit_token_to_pid(msg.trailer.msgh_audit)" "msg.trailer.msgh_audit.val[5]"
     '';
 
   NIX_CFLAGS_COMPILE = lib.optionalString stdenv.isDarwin "-DMAC_OS_X_VERSION_MAX_ALLOWED=MAC_OS_X_VERSION_10_10 -DMAC_OS_X_VERSION_MIN_REQUIRED=MAC_OS_X_VERSION_10_10";
@@ -117,7 +115,9 @@ EOF
     fi
    '';
 
-  qmakeFlags = optional enableProprietaryCodecs "-- -proprietary-codecs";
+  qmakeFlags = if stdenv.hostPlatform.isAarch32 || stdenv.hostPlatform.isAarch64
+    then [ "--" "-system-ffmpeg" ] ++ optional enableProprietaryCodecs "-proprietary-codecs"
+    else optional enableProprietaryCodecs "-- -proprietary-codecs";
 
   propagatedBuildInputs = [
     # Image formats
@@ -133,6 +133,8 @@ EOF
     harfbuzz icu
 
     libevent
+  ] ++ optionals (stdenv.hostPlatform.isAarch32 || stdenv.hostPlatform.isAarch64) [
+    ffmpeg
   ] ++ optionals (!stdenv.isDarwin) [
     dbus zlib minizip snappy nss protobuf jsoncpp
 
@@ -179,13 +181,13 @@ EOF
     [Paths]
     Prefix = ..
     EOF
-    paxmark m $out/libexec/QtWebEngineProcess
   '';
 
   meta = with lib; {
     description = "A web engine based on the Chromium web browser";
     maintainers = with maintainers; [ matthewbauer ];
     platforms = platforms.unix;
+    broken = qt56; # 2018-09-13, no successful build since 2018-04-25
   };
 
 }

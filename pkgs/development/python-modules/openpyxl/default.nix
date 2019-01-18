@@ -9,16 +9,21 @@
 
 buildPythonPackage rec {
   pname = "openpyxl";
-  version = "2.5.4";
-  name = "${pname}-${version}";
+  version = "2.5.10";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "9239b74faf175dc4276a5fc277655fc53c2f704ded39e680d35e6a39e1913f69";
+    sha256 = "41eb21a5620343d715b38081536c4ed3c37249afb72e569fd2af93852ed4ddde";
   };
 
   checkInputs = [ pytest ];
   propagatedBuildInputs = [ jdcal et_xmlfile lxml ];
+
+  postPatch = ''
+    # LICENSE.rst is missing, and setup.cfg currently doesn't contain anything useful anyway
+    # This should likely be removed in the next update
+    rm setup.cfg
+  '';
 
   # Tests are not included in archive.
   # https://bitbucket.org/openpyxl/openpyxl/issues/610

@@ -1,15 +1,15 @@
 { lib, fetchFromGitHub, buildGoPackage }:
 
 buildGoPackage rec {
-  name = "lego-unstable-${version}";
-  version = "2018-02-02";
-  rev = "06a8e7c475c03ef8d4773284ac63357d2810601b";
+  name = "lego-${version}";
+  version = "1.2.1";
+  rev = "v${version}";
 
   src = fetchFromGitHub {
     inherit rev;
     owner = "xenolf";
     repo = "lego";
-    sha256 = "11a9gcgi3317z4lb1apkf6dnbjhf7xni0670nric3fbf5diqfwh2";
+    sha256 = "1b2cv78v54afflz3gfyidkwzq7r2h5j45rmz0ybps03pr0hs4gk3";
   };
 
   goPackagePath = "github.com/xenolf/lego";

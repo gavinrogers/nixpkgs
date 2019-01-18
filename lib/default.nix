@@ -38,10 +38,11 @@ let
     systems = callLibs ./systems;
 
     # misc
+    asserts = callLibs ./asserts.nix;
     debug = callLibs ./debug.nix;
-
     generators = callLibs ./generators.nix;
     misc = callLibs ./deprecated.nix;
+
     # domain-specific
     fetchers = callLibs ./fetchers.nix;
 
@@ -60,11 +61,10 @@ let
       boolToString mergeAttrs flip mapNullable inNixShell min max
       importJSON warn info nixpkgsVersion version mod compare
       splitByAndCompare functionArgs setFunctionArgs isFunction;
-
-    inherit (fixedPoints) fix fix' extends composeExtensions
+    inherit (fixedPoints) fix fix' converge extends composeExtensions
       makeExtensible makeExtensibleWithCustomName;
     inherit (attrsets) attrByPath hasAttrByPath setAttrByPath
-      getAttrFromPath attrVals attrValues catAttrs filterAttrs
+      getAttrFromPath attrVals attrValues getAttrs catAttrs filterAttrs
       filterAttrsRecursive foldAttrs collect nameValuePair mapAttrs
       mapAttrs' mapAttrsToList mapAttrsRecursive mapAttrsRecursiveCond
       genAttrs isDerivation toDerivation optionalAttrs
@@ -80,7 +80,7 @@ let
     inherit (strings) concatStrings concatMapStrings concatImapStrings
       intersperse concatStringsSep concatMapStringsSep
       concatImapStringsSep makeSearchPath makeSearchPathOutput
-      makeLibraryPath makeBinPath makePerlPath optionalString
+      makeLibraryPath makeBinPath optionalString
       hasPrefix hasSuffix stringToCharacters stringAsChars escape
       escapeShellArg escapeShellArgs replaceChars lowerChars
       upperChars toLower toUpper addContextFrom splitString
@@ -109,7 +109,7 @@ let
       mkFixStrictness mkOrder mkBefore mkAfter mkAliasDefinitions
       mkAliasAndWrapDefinitions fixMergeModules mkRemovedOptionModule
       mkRenamedOptionModule mkMergedOptionModule mkChangedOptionModule
-      mkAliasOptionModule doRename filterModules;
+      mkAliasOptionModule mkAliasOptionModuleWithPriority doRename filterModules;
     inherit (options) isOption mkEnableOption mkSinkUndeclaredOptions
       mergeDefaultOption mergeOneOption mergeEqualOption getValues
       getFiles optionAttrSetToDocList optionAttrSetToDocList'
@@ -117,20 +117,22 @@ let
       unknownModule mkOption;
     inherit (types) isType setType defaultTypeMerge defaultFunctor
       isOptionType mkOptionType;
+    inherit (asserts)
+      assertMsg assertOneOf;
     inherit (debug) addErrorContextToAttrs traceIf traceVal traceValFn
       traceXMLVal traceXMLValMarked traceSeq traceSeqN traceValSeq
       traceValSeqFn traceValSeqN traceValSeqNFn traceShowVal
       traceShowValMarked showVal traceCall traceCall2 traceCall3
       traceValIfNot runTests testAllTrue traceCallXml attrNamesToStr;
     inherit (misc) maybeEnv defaultMergeArg defaultMerge foldArgs
-      defaultOverridableDelayableArgs composedArgsAndFun
       maybeAttrNullable maybeAttr ifEnable checkFlag getValue
       checkReqs uniqList uniqListExt condConcat lazyGenericClosure
       innerModifySumArgs modifySumArgs innerClosePropagation
       closePropagation mapAttrsFlatten nvs setAttr setAttrMerge
       mergeAttrsWithFunc mergeAttrsConcatenateValues
       mergeAttrsNoOverride mergeAttrByFunc mergeAttrsByFuncDefaults
-      mergeAttrsByFuncDefaultsClean mergeAttrBy prepareDerivationArgs
-      nixType imap overridableDelayableArgs;
+      mergeAttrsByFuncDefaultsClean mergeAttrBy
+      fakeSha256 fakeSha512
+      nixType imap;
   });
 in lib

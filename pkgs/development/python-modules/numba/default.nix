@@ -14,12 +14,12 @@
 }:
 
 buildPythonPackage rec {
-  version = "0.38.1";
+  version = "0.40.1";
   pname = "numba";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "48fb76b8dcde868d6426c7c7836b76a0b2b20861547770c27b6307f712c09bc5";
+    sha256 = "52d046c13bcf0de79dbfb936874b7228f141b9b8e3447cc35855e9ad3e12aa33";
   };
 
   NIX_CFLAGS_COMPILE = stdenv.lib.optionalString stdenv.isDarwin "-I${libcxx}/include/c++/v1";

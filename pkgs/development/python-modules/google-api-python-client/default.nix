@@ -1,19 +1,20 @@
-{ lib, buildPythonPackage, fetchPypi
-, httplib2, six, google-auth-httplib2, uritemplate }:
+{ lib, buildPythonPackage, fetchPypi, isPy3k
+, httplib2, google_auth, google-auth-httplib2, six, uritemplate, oauth2client }:
 
 buildPythonPackage rec {
   pname = "google-api-python-client";
-  version = "1.7.3";
+  version = "1.7.7";
+  #disabled = !isPy3k; # TODO: Python 2.7 was deprecated but weboob still depends on it.
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "e32d30563b90c4f88ff042d4d891b5e8ed1f6cdca0adab95e9c2ce2603087436";
+    sha256 = "1nlsp8cll6v9w4649j98xw545bfnqa2xs7m9faa9mxc0kp8ff1li";
   };
 
   # No tests included in archive
   doCheck = false;
 
-  propagatedBuildInputs = [ httplib2 google-auth-httplib2 six uritemplate ];
+  propagatedBuildInputs = [ httplib2 google_auth google-auth-httplib2 six uritemplate oauth2client ];
 
   meta = with lib; {
     description = "The core Python library for accessing Google APIs";

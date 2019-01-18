@@ -8,18 +8,18 @@
 
 stdenv.mkDerivation rec {
   name = "v4l-utils-${version}";
-  version = "1.14.2";
+  version = "1.16.2";
 
   src = fetchurl {
-    url = "http://linuxtv.org/downloads/v4l-utils/${name}.tar.bz2";
-    sha256 = "14h6d2p3n4jmxhd8i0p1m5dbwz5vnpb3z88xqd9ghg15n7265fg6";
+    url = "https://linuxtv.org/downloads/v4l-utils/${name}.tar.bz2";
+    sha256 = "0iwfdp4ghzd6l9qg5545032vwmqy2rnhk0xf1g9mad67l74hhckc";
   };
 
   outputs = [ "out" "dev" ];
 
   configureFlags =
     if withUtils then [
-      "--with-udevdir=\${out}/lib/udev"
+      "--with-udevdir=${placeholder "out"}/lib/udev"
     ] else [
       "--disable-v4l-utils"
     ];
@@ -45,7 +45,7 @@ stdenv.mkDerivation rec {
     description = "V4L utils and libv4l, provide common image formats regardless of the v4l device";
     homepage = https://linuxtv.org/projects.php;
     license = licenses.lgpl21Plus;
-    maintainers = with maintainers; [ codyopel viric ];
+    maintainers = with maintainers; [ codyopel ];
     platforms = platforms.linux;
   };
 }

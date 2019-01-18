@@ -1,7 +1,7 @@
-{ stdenv, fetchurl, fetchpatch, pkgconfig, pixman, celt, alsaLib
+{ stdenv, fetchurl, pkgconfig, pixman, celt, alsaLib
 , openssl, libXrandr, libXfixes, libXext, libXrender, libXinerama
 , libjpeg, zlib, spice-protocol, python, pyparsing, glib, cyrus_sasl
-, lz4 }:
+, libcacard, lz4 }:
 
 with stdenv.lib;
 
@@ -9,13 +9,13 @@ stdenv.mkDerivation rec {
   name = "spice-0.14.0";
 
   src = fetchurl {
-    url = "http://www.spice-space.org/download/releases/${name}.tar.bz2";
+    url = "https://www.spice-space.org/download/releases/${name}.tar.bz2";
     sha256 = "0j5q7cp5p95jk8fp48gz76rz96lifimdsx1wnpmfal0nnnar9nrs";
   };
 
   buildInputs = [ pixman celt alsaLib openssl libjpeg zlib
                   libXrandr libXfixes libXrender libXext libXinerama
-                  python pyparsing glib cyrus_sasl lz4 ];
+                  python pyparsing glib cyrus_sasl libcacard lz4 ];
 
   nativeBuildInputs = [ pkgconfig spice-protocol ];
 
@@ -23,7 +23,7 @@ stdenv.mkDerivation rec {
 
   configureFlags = [
     "--with-sasl"
-    "--disable-smartcard"
+    "--enable-smartcard"
     "--enable-client"
     "--enable-lz4"
   ];
@@ -41,7 +41,7 @@ stdenv.mkDerivation rec {
       VD-Interfaces. The VD-Interfaces (VDI) enable both ends of the solution to be easily
       utilized by a third-party component.
     '';
-    homepage = http://www.spice-space.org/;
+    homepage = https://www.spice-space.org/;
     license = licenses.lgpl21;
 
     maintainers = [ maintainers.bluescreen303 ];

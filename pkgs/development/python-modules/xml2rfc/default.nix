@@ -1,16 +1,30 @@
-{ lib, fetchurl, buildPythonPackage, intervaltree, pyflakes, requests, lxml }:
+{ lib, fetchPypi, buildPythonPackage, intervaltree, pyflakes, requests, lxml, google-i18n-address
+, pycountry, html5lib, six
+}:
 
 buildPythonPackage rec {
-  name = "${pname}-${version}";
   pname = "xml2rfc";
-  version = "2.9.8";
+  version = "2.12.3";
 
-  src = fetchurl {
-    url = "mirror://pypi/x/${pname}/${name}.tar.gz";
-    sha256 = "1img6941wvwpk71q3vi9526bfjbh949k4lphrvdwlcf4igwy435m";
+  src = fetchPypi {
+    inherit pname version;
+    sha256 = "64609a2194d18c03e2348f1ea2fb97208b3455dfb76a16900143813aa61b6d3c";
   };
 
-  propagatedBuildInputs = [ intervaltree pyflakes requests lxml ];
+  propagatedBuildInputs = [
+    intervaltree
+    pyflakes
+    requests
+    lxml
+    google-i18n-address
+    pycountry
+    html5lib
+    six
+  ];
+
+  preCheck = ''
+    export HOME=$(mktemp -d)
+  '';
 
   meta = with lib; {
     description = "Tool generating IETF RFCs and drafts from XML sources";

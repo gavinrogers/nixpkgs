@@ -13,6 +13,7 @@ rec {
   # 1. basic example
   bash = buildImage {
     name = "bash";
+    tag = "latest";
     contents = pkgs.bashInteractive;
   };
 
@@ -65,6 +66,7 @@ rec {
   in
   buildImage {
     name = "nginx-container";
+    tag = "latest";
     contents = pkgs.nginx;
 
     runAsRoot = ''
@@ -106,6 +108,7 @@ rec {
   # docker run -it --rm nix nix-store -qR $(nix-build '<nixpkgs>' -A nix)
   nix = buildImageWithNixDb {
     name = "nix";
+    tag = "latest";
     contents = [
       # nix-store uses cat program to display results as specified by
       # the image env variable NIX_PAGER.
@@ -121,6 +124,7 @@ rec {
   # dockerTools chain.
   onTopOfPulledImage = buildImage {
     name = "onTopOfPulledImage";
+    tag = "latest";
     fromImage = nixFromDockerHub;
     contents = [ pkgs.hello ];
   };
@@ -129,11 +133,57 @@ rec {
   # See issue #34779 and PR #40947 for details.
   runAsRootExtraCommands = pkgs.dockerTools.buildImage {
     name = "runAsRootExtraCommands";
+    tag = "latest";
     contents = [ pkgs.coreutils ];
     # The parens here are to create problematic bash to embed and eval. In case
     # this is *embedded* into the script (with nix expansion) the initial quotes
     # will close the string and the following parens are unexpected
     runAsRoot = ''echo "(runAsRoot)" > runAsRoot'';
     extraCommands = ''echo "(extraCommand)" > extraCommands'';
+  };
+
+  # 9. Ensure that setting created to now results in a date which
+  # isn't the epoch + 1
+  unstableDate = pkgs.dockerTools.buildImage {
+    name = "unstable-date";
+    tag = "latest";
+    contents = [ pkgs.coreutils ];
+    created = "now";
+  };
+
+  # 10. Create a layered image
+  layered-image = pkgs.dockerTools.buildLayeredImage {
+    name = "layered-image";
+    tag = "latest";
+    extraCommands = ''echo "(extraCommand)" > extraCommands'';
+    config.Cmd = [ "${pkgs.hello}/bin/hello" ];
+    contents = [ pkgs.hello pkgs.bash pkgs.coreutils ];
+  };
+
+  # 11. Create an image on top of a layered image
+  layered-on-top = pkgs.dockerTools.buildImage {
+    name = "layered-on-top";
+    tag = "latest";
+    fromImage = layered-image;
+    extraCommands = ''
+      mkdir ./example-output
+      chmod 777 ./example-output
+    '';
+    config = {
+      Env = [ "PATH=${pkgs.coreutils}/bin/" ];
+      WorkingDir = "/example-output";
+      Cmd = [
+        "${pkgs.bash}/bin/bash" "-c" "echo hello > foo; cat foo"
+      ];
+    };
+  };
+
+  # 12. example of running something as root on top of a parent image
+  # Regression test related to PR #52109
+  runAsRootParentImage = buildImage {
+    name = "runAsRootParentImage";
+    tag = "latest";
+    runAsRoot = "touch /example-file";
+    fromImage = bash;
   };
 }

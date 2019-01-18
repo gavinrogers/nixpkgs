@@ -4,7 +4,7 @@
 stdenv.mkDerivation rec {
   name = "spice-vdagent-0.18.0";
   src = fetchurl {
-    url = "http://www.spice-space.org/download/releases/${name}.tar.bz2";
+    url = "https://www.spice-space.org/download/releases/${name}.tar.bz2";
     sha256 = "1bmyvapwj1x0m6y8q0r1df2q37vsnb04qkgnnrfbnzf1qzipxvl0";
   };
   postPatch = ''
@@ -24,7 +24,7 @@ stdenv.mkDerivation rec {
          to the client resolution
        * Multiple displays
     '';
-    homepage = http://www.spice-space.org/home.html;
+    homepage = https://www.spice-space.org/;
     license = stdenv.lib.licenses.gpl3;
     maintainers = [ stdenv.lib.maintainers.aboseley ];
     platforms = stdenv.lib.platforms.linux;

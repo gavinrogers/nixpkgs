@@ -17,6 +17,10 @@ stdenv.mkDerivation rec {
     patchShebangs .
   '';
 
+  # TODO: remove this preConfigure hook after 5.2.0 since it is fixed upstream
+  # see https://github.com/mozilla/rr/issues/2269
+  preConfigure = ''substituteInPlace CMakeLists.txt --replace "std=c++11" "std=c++14"'';
+
   nativeBuildInputs = [ pkgconfig ];
   buildInputs = [
     cmake libpfm zlib python2Packages.python python2Packages.pexpect which procps gdb capnproto
@@ -40,7 +44,7 @@ stdenv.mkDerivation rec {
   preCheck = "export HOME=$TMPDIR";
 
   meta = {
-    homepage = http://rr-project.org/;
+    homepage = https://rr-project.org/;
     description = "Records nondeterministic executions and debugs them deterministically";
     longDescription = ''
       rr aspires to be your primary debugging tool, replacing -- well,
@@ -49,8 +53,8 @@ stdenv.mkDerivation rec {
       time the same execution is replayed.
     '';
 
-    license = "custom";
+    license = with stdenv.lib.licenses; [ mit bsd2 ];
     maintainers = with stdenv.lib.maintainers; [ pierron thoughtpolice ];
-    platforms = ["x86_64-linux"];
+    platforms = stdenv.lib.platforms.x86;
   };
 }

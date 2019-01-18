@@ -1,10 +1,11 @@
-{ stdenv, lib, fetchurl, dpkg, makeDesktopItem, gnome3, gtk2, atk, cairo, pango, gdk_pixbuf, glib
-, freetype, fontconfig, dbus, libnotify, libX11, xorg, libXi, libXcursor, libXdamage
-, libXrandr, libXcomposite, libXext, libXfixes, libXrender, libXtst, libXScrnSaver
-, nss, nspr, alsaLib, cups, expat, udev, xdg_utils, hunspell
+{ stdenv, fetchurl, dpkg, makeDesktopItem, libuuid, gtk3, atk, cairo, pango
+, gdk_pixbuf, glib, freetype, fontconfig, dbus, libnotify, libX11, xorg, libXi
+, libXcursor, libXdamage, libXrandr, libXcomposite, libXext, libXfixes
+, libXrender, libXtst, libXScrnSaver, nss, nspr, alsaLib, cups, expat, udev
+, xdg_utils, hunspell, pulseaudio, pciutils, at-spi2-atk
 }:
 let
-  rpath = lib.makeLibraryPath [
+  rpath = stdenv.lib.makeLibraryPath [
     alsaLib
     atk
     cairo
@@ -15,10 +16,10 @@ let
     freetype
     gdk_pixbuf
     glib
-    gnome3.gconf
-    gtk2
-    pango
+    gtk3
+    at-spi2-atk
     hunspell
+    libuuid
     libnotify
     libX11
     libXcomposite
@@ -33,23 +34,26 @@ let
     libXtst
     nspr
     nss
+    pango
+    pciutils
+    pulseaudio
     stdenv.cc.cc
     udev
     xdg_utils
     xorg.libxcb
   ];
 
-  version = "3.0.2816";
+  version = "3.5.2881";
 
   plat = {
     "i686-linux" = "i386";
     "x86_64-linux" = "amd64";
-  }.${stdenv.system};
+  }.${stdenv.hostPlatform.system};
 
   sha256 = {
-    "i686-linux" = "1ds807j1b8dk9hrnzbg4g9mvn44abw24pxrqns9ai62mh3hvi65p";
-    "x86_64-linux" = "13pyyp2c8q0v0ni2hzh2jnbd3i96q68314glbmy4kyh7vm9427lc";
-  }.${stdenv.system};
+    "i686-linux" = "0s5j6acsiymsikvah9f1ywandzvcdx5m8csrc7ymhv0gx2a9xm1d";
+    "x86_64-linux" = "17siis4xws27jmhf1gyb6cvip6clak27zxckyk0b312kkc4q363i";
+  }.${stdenv.hostPlatform.system};
 
 in
   stdenv.mkDerivation rec {
@@ -70,35 +74,38 @@ in
       categories = "Network;InstantMessaging;Chat;VideoConference";
     };
 
-    phases = [ "unpackPhase" "installPhase" ];
+    dontBuild = true;
+    dontPatchELF = true;
+    dontConfigure = true;
+
     nativeBuildInputs = [ dpkg ];
     unpackPhase = "dpkg-deb -x $src .";
     installPhase = ''
-      mkdir -p $out
-      cp -R opt $out
-      cp -R usr/share $out/share
+      mkdir -p "$out"
+      cp -R "opt" "$out"
+      cp -R "usr/share" "$out/share"
 
-      chmod -R g-w $out
+      chmod -R g-w "$out"
 
-      # Patch signal
+      # Patch wire-desktop
       patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-               --set-rpath "${rpath}:$out/opt/wire-desktop" \
-               "$out/opt/wire-desktop/wire-desktop"
+               --set-rpath "${rpath}:$out/opt/Wire" \
+               "$out/opt/Wire/wire-desktop"
 
       # Symlink to bin
-      mkdir -p $out/bin
-      ln -s "$out/opt/wire-desktop/wire-desktop" $out/bin/wire-desktop
+      mkdir -p "$out/bin"
+      ln -s "$out/opt/Wire/wire-desktop" "$out/bin/wire-desktop"
 
       # Desktop file
-      mkdir -p $out/share/applications
-      cp ${desktopItem}/share/applications/* $out/share/applications
+      mkdir -p "$out/share/applications"
+      cp "${desktopItem}/share/applications/"* "$out/share/applications"
     '';
-    
-    meta = {
+
+    meta = with stdenv.lib; {
       description = "A modern, secure messenger";
       homepage    = https://wire.com/;
-      license     = lib.licenses.gpl3;
-      maintainers = with lib.maintainers; [ worldofpeace ];
-      platforms = [ "i686-linux" "x86_64-linux" ];
+      license     = licenses.gpl3;
+      maintainers = with maintainers; [ worldofpeace ];
+      platforms   = [ "i686-linux" "x86_64-linux" ];
     };
   }

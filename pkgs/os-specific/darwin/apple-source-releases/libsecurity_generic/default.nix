@@ -1,7 +1,7 @@
 { appleDerivation_, applePackage, pkgs, stdenv }:
 name: version: sha256: args: let
   n = stdenv.lib.removePrefix "lib" name;
-  makeFile = ../. + builtins.toPath "/${name}/GNUmakefile";
+  makeFile = ../. + "/${name}/GNUmakefile";
   appleDerivation = appleDerivation_ name version sha256;
   in applePackage name version sha256 (args // {
     appleDerivation = a:
@@ -21,18 +21,18 @@ name: version: sha256: args: let
         grep -Rl MacTypes.h . | while read file; do
           substituteInPlace "''$file" --replace \
             '<CoreServices/../Frameworks/CarbonCore.framework/Headers/MacTypes.h>' \
-            '"${pkgs.darwin.apple_sdk.sdk.out}/include/MacTypes.h"'
+            '"${stdenv.lib.getDev pkgs.darwin.apple_sdk.sdk}/include/MacTypes.h"'
         done || true # grep returns 1 if it can't find the string
       '';
       preBuild = ''
         ln -s lib ${n}
-        makeFlagsArray=(-j''$NIX_BUILD_CORES)
+        makeFlagsArray=(-j$NIX_BUILD_CORES)
       '';
+      outputs = [ "out" "dev" ];
       buildInputs = [
         pkgs.gnustep.make
         pkgs.darwin.apple_sdk.frameworks.AppKit
         pkgs.darwin.apple_sdk.frameworks.Foundation
-        pkgs.darwin.cf-private
       ];
       makeFlags = [
         "-f${makeFile}"
@@ -51,6 +51,7 @@ name: version: sha256: args: let
         "-iframework ${pkgs.darwin.Security}/Library/Frameworks"
         "-I."
         "-Wno-deprecated-declarations"
+        "-DNDEBUG"
       ];
       NIX_LDFLAGS = with pkgs.darwin; with apple_sdk.frameworks; [
         "-L${libobjc}/lib"

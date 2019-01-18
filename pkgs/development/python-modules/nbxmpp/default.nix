@@ -1,16 +1,17 @@
-{ stdenv, buildPythonPackage, fetchzip, pyopenssl }:
+{ stdenv, buildPythonPackage, fetchzip, pyopenssl, python }:
 
-buildPythonPackage rec {
+let
   pname = "nbxmpp";
-  version = "0.6.6";
+  version = "0.6.8";
   name = "${pname}-${version}";
-
+in buildPythonPackage rec {
+  inherit pname version;
   # Tests aren't included in PyPI tarball.
   src = fetchzip {
     name = "${name}.tar.bz2";
     url = "https://dev.gajim.org/gajim/python-nbxmpp/repository/archive.tar.bz2?"
         + "ref=${name}";
-    sha256 = "10n7z613p00q15dplsvdrz11s9yq26jy2qack6nd8k7fivfhlcmz";
+    sha256 = "09zrqz01j45kvayfscd66avkrnn237lbjg9li5hjhyw92h6hkkc4";
   };
 
   propagatedBuildInputs = [ pyopenssl ];
@@ -18,7 +19,7 @@ buildPythonPackage rec {
   checkPhase = ''
     # Disable tests requiring networking
     echo "" > test/unit/test_xmpp_transports_nb2.py
-    python test/runtests.py
+    ${python.executable} test/runtests.py
   '';
 
   meta = with stdenv.lib; {

@@ -1,5 +1,5 @@
 { stdenv, lib, fetchurl, autoreconfHook, pkgconfig
-, openssl, netcat-gnu, gnutls, gsasl, libidn, Security
+, netcat-gnu, gnutls, gsasl, libidn2, Security
 , withKeyring ? true, libsecret ? null
 , systemd ? null }:
 
@@ -10,18 +10,18 @@ let
 in stdenv.mkDerivation rec {
   pname = "msmtp";
   name = "${pname}-${version}";
-  version = "1.6.6";
+  version = "1.8.1";
 
   src = fetchurl {
-    url = "mirror://sourceforge/msmtp/${name}.tar.xz";
-    sha256 = "0ppvww0sb09bnsrpqnvlrn8vx231r24xn2iiwpy020mxc8gxn5fs";
+    url = "https://marlam.de/msmtp/releases/${name}.tar.xz";
+    sha256 = "1nm4vizrnrrnknc4mc8nr7grz9q76m1vraa0hsl5rfm34gnsg8ph";
   };
 
   patches = [
     ./paths.patch
   ];
 
-  buildInputs = [ openssl gnutls gsasl libidn ]
+  buildInputs = [ gnutls gsasl libidn2 ]
     ++ stdenv.lib.optional stdenv.isDarwin Security
     ++ stdenv.lib.optional withKeyring libsecret;
 
@@ -52,8 +52,8 @@ in stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "Simple and easy to use SMTP client with excellent sendmail compatibility";
-    homepage = http://msmtp.sourceforge.net/;
-    license = licenses.gpl3;
+    homepage = https://marlam.de/msmtp/;
+    license = licenses.gpl3Plus;
     maintainers = with maintainers; [ garbas peterhoeg ];
     platforms = platforms.unix;
   };

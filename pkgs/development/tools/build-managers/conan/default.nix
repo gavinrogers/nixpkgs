@@ -1,6 +1,6 @@
-{ lib, fetchpatch, python }:
+{ lib, python3, git }:
 
-let newPython = python.override {
+let newPython = python3.override {
   packageOverrides = self: super: {
     distro = super.distro.overridePythonAttrs (oldAttrs: rec {
       version = "1.1.0";
@@ -10,44 +10,55 @@ let newPython = python.override {
       };
     });
     node-semver = super.node-semver.overridePythonAttrs (oldAttrs: rec {
-      version = "0.2.0";
+      version = "0.6.1";
       src = oldAttrs.src.override {
         inherit version;
-        sha256 = "1080pdxrvnkr8i7b7bk0dfx6cwrkkzzfaranl7207q6rdybzqay3";
+        sha256 = "1dv6mjsm67l1razcgmq66riqmsb36wns17mnipqr610v0z0zf5j0";
+      };
+    });
+    future = super.future.overridePythonAttrs (oldAttrs: rec {
+      version = "0.16.0";
+      src = oldAttrs.src.override {
+        inherit version;
+        sha256 = "1nzy1k4m9966sikp0qka7lirh8sqrsyainyf8rk97db7nwdfv773";
+      };
+    });
+    tqdm = super.tqdm.overridePythonAttrs (oldAttrs: rec {
+      version = "4.28.1";
+      src = oldAttrs.src.override {
+        inherit version;
+        sha256 = "1fyybgbmlr8ms32j7h76hz5g9xc6nf0644mwhc40a0s5k14makav";
       };
     });
   };
 };
 
 in newPython.pkgs.buildPythonApplication rec {
-  version = "1.4.5";
+  version = "1.11.2";
   pname = "conan";
 
   src = newPython.pkgs.fetchPypi {
     inherit pname version;
-    sha256 = "1mjakrv1d7la3lrxsv6jjqprqwmslpjmfxkw3z7pk56rzlp99nv2";
+    sha256 = "0b4r9n6541jjp2lsdzc1nc6mk1a953w0d4ynjss3ns7pp89y4nd4";
   };
-
-  postPatch = ''
-    # Remove pylint constraint
-    substituteInPlace conans/requirements.txt --replace ", <1.9.0" ""
-  '';
-
-  checkInputs = with newPython.pkgs; [
+  checkInputs = [
+    git
+  ] ++ (with newPython.pkgs; [
+    codecov
+    mock
+    node-semver
     nose
     parameterized
-    mock
     webtest
-    codecov
-  ];
+  ]);
 
   propagatedBuildInputs = with newPython.pkgs; [
-    requests fasteners pyyaml pyjwt colorama patch
-    bottle pluginbase six distro pylint node-semver
-    future pygments mccabe deprecation
+    colorama deprecation distro fasteners bottle
+    future node-semver patch pygments pluginbase
+    pyjwt pylint pyyaml requests six tqdm
   ];
 
-  preCheck = ''
+  checkPhase = ''
     export HOME="$TMP/conan-home"
     mkdir -p "$HOME"
   '';
@@ -56,6 +67,7 @@ in newPython.pkgs.buildPythonApplication rec {
     homepage = https://conan.io;
     description = "Decentralized and portable C/C++ package manager";
     license = licenses.mit;
+    maintainers = with maintainers; [ HaoZeke ];
     platforms = platforms.linux;
   };
 }

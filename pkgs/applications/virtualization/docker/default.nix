@@ -1,6 +1,6 @@
 { stdenv, lib, fetchFromGitHub, makeWrapper, removeReferencesTo, pkgconfig
 , go-md2man, go, containerd, runc, docker-proxy, tini, libtool
-, sqlite, iproute, bridge-utils, devicemapper, systemd
+, sqlite, iproute, lvm2, systemd
 , btrfs-progs, iptables, e2fsprogs, xz, utillinux, xfsprogs
 , procps, libseccomp
 }:
@@ -16,7 +16,8 @@ rec {
     } :
   let
     docker-runc = runc.overrideAttrs (oldAttrs: rec {
-      name = "docker-runc";
+      name = "docker-runc-${version}";
+      inherit version;
       src = fetchFromGitHub {
         owner = "docker";
         repo = "runc";
@@ -27,8 +28,9 @@ rec {
       patches = [];
     });
 
-    docker-containerd = (containerd.override { inherit go; }).overrideAttrs (oldAttrs: rec {
-      name = "docker-containerd";
+    docker-containerd = containerd.overrideAttrs (oldAttrs: rec {
+      name = "docker-containerd-${version}";
+      inherit version;
       src = fetchFromGitHub {
         owner = "docker";
         repo = "containerd";
@@ -37,12 +39,11 @@ rec {
       };
 
       hardeningDisable = [ "fortify" ];
-
-      buildInputs = [ removeReferencesTo go btrfs-progs ];
     });
 
     docker-tini = tini.overrideAttrs  (oldAttrs: rec {
-      name = "docker-init";
+      name = "docker-init-${version}";
+      inherit version;
       src = fetchFromGitHub {
         owner = "krallin";
         repo = "tini";
@@ -66,7 +67,7 @@ rec {
     DOCKER_BUILDTAGS = []
       ++ optional (systemd != null) [ "journald" ]
       ++ optional (btrfs-progs == null) "exclude_graphdriver_btrfs"
-      ++ optional (devicemapper == null) "exclude_graphdriver_devicemapper"
+      ++ optional (lvm2 == null) "exclude_graphdriver_devicemapper"
       ++ optional (libseccomp != null) "seccomp";
 
    }) // rec {
@@ -88,7 +89,7 @@ rec {
     buildInputs = [
       makeWrapper removeReferencesTo go-md2man go libtool
     ] ++ optionals (stdenv.isLinux) [
-      sqlite devicemapper btrfs-progs systemd libseccomp
+      sqlite lvm2 btrfs-progs systemd libseccomp
     ];
 
     dontStrip = true;
@@ -136,9 +137,9 @@ rec {
         --prefix PATH : "$out/libexec/docker:$extraPath"
 
       # docker uses containerd now
-      ln -s ${docker-containerd}/bin/containerd $out/libexec/docker/docker-containerd
-      ln -s ${docker-containerd}/bin/containerd-shim $out/libexec/docker/docker-containerd-shim
-      ln -s ${docker-runc}/bin/runc $out/libexec/docker/docker-runc
+      ln -s ${docker-containerd}/bin/containerd $out/libexec/docker/containerd
+      ln -s ${docker-containerd}/bin/containerd-shim $out/libexec/docker/containerd-shim
+      ln -s ${docker-runc}/bin/runc $out/libexec/docker/runc
       ln -s ${docker-proxy}/bin/docker-proxy $out/libexec/docker/docker-proxy
       ln -s ${docker-tini}/bin/tini-static $out/libexec/docker/docker-init
 
@@ -197,27 +198,15 @@ rec {
   # Get revisions from
   # https://github.com/docker/docker-ce/tree/v${version}/components/engine/hack/dockerfile/install/*
 
-  docker_18_03 = dockerGen rec {
-    version = "18.03.1-ce";
-    rev = "9ee9f402cd1eba817c5591a64f1d770c87c421a4"; # git commit
-    sha256 = "1jm3jmcbkvvy3s8pi3xcpir6mwxjfbad46lbif4bnpjfd2r5irrx";
-    runcRev = "4fc53a81fb7c994640722ac585fa9ca548971871";
-    runcSha256 = "1ikqw39jn8dzb4snc4pcg3z85jb67ivskdhx028k17ss29bf4062";
-    containerdRev = "773c489c9c1b21a6d78b5c538cd395416ec50f88";
-    containerdSha256 = "0k1zjn0mpd7q3p5srxld2fr4k6ijzbk0r34r6w69sh0d0rd2fvbs";
-    tiniRev = "949e6facb77383876aeff8a6944dde66b3089574";
-    tiniSha256 = "0zj4kdis1vvc6dwn4gplqna0bs7v6d1y2zc8v80s3zi018inhznw";
-  };
-
-  docker_18_05 = dockerGen rec {
-    version = "18.05.0-ce";
-    rev = "f150324782643a5268a04e7d1a675587125da20e"; # git commit
-    sha256 = "0vgh03qwlfm25sm3yaa6vf5ap2ag575f814ccgcrp5zlcal13r0z";
-    runcRev = "4fc53a81fb7c994640722ac585fa9ca548971871";
-    runcSha256 = "1ikqw39jn8dzb4snc4pcg3z85jb67ivskdhx028k17ss29bf4062";
-    containerdRev = "773c489c9c1b21a6d78b5c538cd395416ec50f88";
-    containerdSha256 = "0k1zjn0mpd7q3p5srxld2fr4k6ijzbk0r34r6w69sh0d0rd2fvbs";
-    tiniRev = "949e6facb77383876aeff8a6944dde66b3089574";
-    tiniSha256 = "0zj4kdis1vvc6dwn4gplqna0bs7v6d1y2zc8v80s3zi018inhznw";
+  docker_18_09 = dockerGen rec {
+    version = "18.09.0";
+    rev = "4d60db472b2bde6931072ca6467f2667c2590dff"; # git commit
+    sha256 = "0py944f5k71c1cf6ci96vnqk43d5979w7r82cngaxk1g6za6k5yj";
+    runcRev = "69663f0bd4b60df09991c08812a60108003fa340";
+    runcSha256 = "1l37r97l3ra4ph069w190d05r0a43s76nn9jvvlkbwrip1cp6gyq";
+    containerdRev = "468a545b9edcd5932818eb9de8e72413e616e86e";
+    containerdSha256 = "1rp015cm5fw9kfarcmfhfkr1sh0iz7kvqls6f8nfhwrrz5armd5v";
+    tiniRev = "fec3683b971d9c3ef73f284f176672c44b448662";
+    tiniSha256 = "1h20i3wwlbd8x4jr2gz68hgklh0lb0jj7y5xk1wvr8y58fip1rdn";
   };
 }

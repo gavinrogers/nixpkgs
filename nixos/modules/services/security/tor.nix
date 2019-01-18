@@ -57,6 +57,11 @@ let
     AutomapHostsSuffixes ${concatStringsSep "," cfg.client.dns.automapHostsSuffixes}
     ''}
   ''
+  # Explicitly disable the SOCKS server if the client is disabled.  In
+  # particular, this makes non-anonymous hidden services possible.
+  + optionalString (! cfg.client.enable) ''
+  SOCKSPort 0
+  ''
   # Relay config
   + optionalString cfg.relay.enable ''
     ORPort ${toString cfg.relay.port}
@@ -87,6 +92,7 @@ let
   # Hidden services
   + concatStrings (flip mapAttrsToList cfg.hiddenServices (n: v: ''
     HiddenServiceDir ${torDirectory}/onion/${v.name}
+    ${optionalString (v.version != null) "HiddenServiceVersion ${toString v.version}"}
     ${flip concatMapStrings v.map (p: ''
       HiddenServicePort ${toString p.port} ${p.destination}
     '')}
@@ -208,7 +214,7 @@ in
           enable = mkOption {
             type = types.bool;
             default = false;
-            description = "Whether to enable tor transaprent proxy";
+            description = "Whether to enable tor transparent proxy";
           };
 
           listenAddress = mkOption {
@@ -578,7 +584,7 @@ in
             ];
           }
         '';
-        type = types.loaOf (types.submodule ({name, config, ...}: {
+        type = types.loaOf (types.submodule ({name, ...}: {
           options = {
 
              name = mkOption {
@@ -638,7 +644,7 @@ in
              authorizeClient = mkOption {
                default = null;
                description = "If configured, the hidden service is accessible for authorized clients only.";
-               type = types.nullOr (types.submodule ({config, ...}: {
+               type = types.nullOr (types.submodule ({...}: {
 
                  options = {
 
@@ -661,6 +667,12 @@ in
                    };
                  };
                }));
+             };
+
+             version = mkOption {
+               default = null;
+               description = "Rendezvous service descriptor version to publish for the hidden service. Currently, versions 2 and 3 are supported. (Default: 2)";
+               type = types.nullOr (types.enum [ 2 3 ]);
              };
           };
 
@@ -686,8 +698,8 @@ in
         always create a container/VM with a separate Tor daemon instance.
       '';
 
-    users.extraGroups.tor.gid = config.ids.gids.tor;
-    users.extraUsers.tor =
+    users.groups.tor.gid = config.ids.gids.tor;
+    users.users.tor =
       { description = "Tor Daemon User";
         createHome  = true;
         home        = torDirectory;

@@ -1,19 +1,20 @@
-{ mkDerivation, lib, fetchurl, fetchpatch, cmake, extra-cmake-modules
+{ mkDerivation, lib, stdenv, fetchurl, cmake, extra-cmake-modules
 , karchive, kconfig, kwidgetsaddons, kcompletion, kcoreaddons
 , kguiaddons, ki18n, kitemmodels, kitemviews, kwindowsystem
 , kio, kcrash
-, boost, libraw, fftw, eigen, exiv2, lcms2, gsl, openexr
-, openjpeg, opencolorio, vc, poppler_qt5, curl, ilmbase
+, boost, libraw, fftw, eigen, exiv2, libheif, lcms2, gsl, openexr, giflib
+, openjpeg, opencolorio, vc, poppler, curl, ilmbase
 , qtmultimedia, qtx11extras
+, python3
 }:
 
 mkDerivation rec {
   name = "krita-${version}";
-  version = "4.0.3";
+  version = "4.1.5";
 
   src = fetchurl {
     url = "https://download.kde.org/stable/krita/${version}/${name}.tar.gz";
-    sha256 = "0zmn29dzqncc80pvy9ymgyzqw8x1ryq8b4x5mr4sz15iyj7xgspr";
+    sha256 = "1by8p8ifdp03f05bhg8ygdd1j036anfpjjnzbx63l2fbmy9k6q10";
   };
 
   nativeBuildInputs = [ cmake extra-cmake-modules ];
@@ -21,10 +22,11 @@ mkDerivation rec {
   buildInputs = [
     karchive kconfig kwidgetsaddons kcompletion kcoreaddons kguiaddons
     ki18n kitemmodels kitemviews kwindowsystem kio kcrash
-    boost libraw fftw eigen exiv2 lcms2 gsl openexr
-    openjpeg opencolorio vc poppler_qt5 curl ilmbase
+    boost libraw fftw eigen exiv2 lcms2 gsl openexr libheif giflib
+    openjpeg opencolorio poppler curl ilmbase
     qtmultimedia qtx11extras
-  ];
+    python3
+  ] ++ lib.optional (stdenv.hostPlatform.isi686 || stdenv.hostPlatform.isx86_64) vc;
 
   NIX_CFLAGS_COMPILE = [ "-I${ilmbase.dev}/include/OpenEXR" ];
 

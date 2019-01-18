@@ -2,14 +2,14 @@
 
 pythonPackages.buildPythonApplication rec {
   pname = "http-prompt";
-  version = "0.11.1";
+  version = "1.0.0";
   name = "${pname}-${version}";
 
   src = fetchFromGitHub {
     rev = "v${version}";
     repo = "http-prompt";
     owner = "eliangcs";
-    sha256 = "0gi76wcn6lxkd74ljpbyhr7ylhq6sm8z7h66dnfmpsw4nhw49178";
+    sha256 = "0kngz2izcqjphbrdkg489p0xmf65xjc8ki1a2szcc8sgwc7z74xy";
   };
 
   propagatedBuildInputs = with pythonPackages; [

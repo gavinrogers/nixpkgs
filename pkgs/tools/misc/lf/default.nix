@@ -2,13 +2,13 @@
 
 buildGoPackage rec {
   name = "lf-${version}";
-  version = "5";
+  version = "8";
 
   src = fetchFromGitHub {
     owner = "gokcehan";
     repo = "lf";
     rev = "r${version}";
-    sha256 = "0qgvaa69xs97x42j1ikb03bzpm497z9h3qk7adbdippaqcj40s70";
+    sha256 = "0rmcac9wx9lldl57m1cim1adf2fqkva1yi4v6934jgccqhlqvk58";
   };
 
   goPackagePath = "github.com/gokcehan/lf";
@@ -26,6 +26,10 @@ buildGoPackage rec {
     cd go/src/${goPackagePath}
     go install -ldflags="-s -w -X main.gVersion=r${version}"
     runHook postBuild
+  '';
+
+  postInstall = ''
+    install -D --mode=444 lf.1 $out/share/man/man1/lf.1
   '';
 
   meta = with stdenv.lib; {

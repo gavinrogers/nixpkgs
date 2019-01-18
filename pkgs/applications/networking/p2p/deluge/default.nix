@@ -18,7 +18,8 @@ pythonPackages.buildPythonPackage rec {
   ];
 
   propagatedBuildInputs = with pythonPackages; [
-    pyGtkGlade libtorrentRasterbar twisted Mako chardet pyxdg pyopenssl service-identity
+    pyGtkGlade twisted Mako chardet pyxdg pyopenssl service-identity
+    libtorrentRasterbar.dev libtorrentRasterbar.python
   ];
 
   nativeBuildInputs = [ intltool ];
@@ -31,7 +32,7 @@ pythonPackages.buildPythonPackage rec {
   '';
 
   meta = with stdenv.lib; {
-    homepage = http://deluge-torrent.org;
+    homepage = https://deluge-torrent.org;
     description = "Torrent client";
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ domenkozar ebzzry ];

@@ -2,7 +2,7 @@
 
 buildGoPackage rec {
   name = "joker-${version}";
-  version = "0.9.3";
+  version = "0.10.1";
 
   goPackagePath = "github.com/candid82/joker";
 
@@ -10,7 +10,7 @@ buildGoPackage rec {
     rev = "v${version}";
     owner = "candid82";
     repo = "joker";
-    sha256 = "1738gr25hlffc8ppzy6kik21jfix9iy316kv1kj1lqxr8giirhf6";
+    sha256 = "1c3p61jmlljljbiwsylmfa75pi00y7yj5wabx1rxmpswc41g5mab";
   };
 
   preBuild = "go generate ./...";

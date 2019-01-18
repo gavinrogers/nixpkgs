@@ -1,4 +1,4 @@
-{ mkDerivation, lib, fetchFromGitHub, cmake, doxygen, extra-cmake-modules, wrapGAppsHook, fetchpatch
+{ mkDerivation, lib, fetchFromGitHub, cmake, doxygen, extra-cmake-modules, wrapGAppsHook
 
 # For `digitaglinktree`
 , perl, sqlite
@@ -6,7 +6,7 @@
 , qtbase
 , qtxmlpatterns
 , qtsvg
-, qtwebkit
+, qtwebengine
 
 , kcalcore
 , kconfigwidgets
@@ -34,8 +34,8 @@
 , libqtav
 , libusb1
 , marble
-, libGLU_combined
-, mysql
+, libGL
+, libGLU
 , opencv3
 , pcre
 , threadweaver
@@ -76,14 +76,15 @@ mkDerivation rec {
     liblqr1
     libqtav
     libusb1
-    libGLU_combined
+    libGL
+    libGLU
     opencv3
     pcre
 
     qtbase
     qtxmlpatterns
     qtsvg
-    qtwebkit
+    qtwebengine
 
     kcalcore
     kconfigwidgets
@@ -104,6 +105,7 @@ mkDerivation rec {
     "-DENABLE_MYSQLSUPPORT=1"
     "-DENABLE_INTERNALMYSQL=1"
     "-DENABLE_MEDIAPLAYER=1"
+    "-DENABLE_QWEBENGINE=on"
   ];
 
   preFixup = ''

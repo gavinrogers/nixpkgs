@@ -24,9 +24,6 @@
   #   most likely fails as GRUB will probably refuse to install.
   partitionTableType ? "legacy"
 
-  # Whether to invoke switch-to-configuration boot during image creation
-, installBootLoader ? true
-
 , # The root file system type.
   fsType ? "ext4"
 
@@ -87,7 +84,7 @@ let format' = format; in let
   # FIXME: merge with channel.nix / make-channel.nix.
   channelSources = pkgs.runCommand "nixos-${config.system.nixos.version}" {} ''
     mkdir -p $out
-    cp -prd ${nixpkgs} $out/nixos
+    cp -prd ${nixpkgs.outPath} $out/nixos
     chmod -R u+w $out/nixos
     if [ ! -e $out/nixos/nixpkgs ]; then
       ln -s . $out/nixos/nixpkgs

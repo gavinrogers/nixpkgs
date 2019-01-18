@@ -1,7 +1,7 @@
 # This module gets rid of all dependencies on X11 client libraries
 # (including fontconfig).
 
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
 
 with lib;
 
@@ -35,7 +35,7 @@ with lib;
       networkmanager-vpnc = super.networkmanager-vpnc.override { withGnome = false; };
       networkmanager-iodine = super.networkmanager-iodine.override { withGnome = false; };
       pinentry = super.pinentry_ncurses;
-      gobjectIntrospection = super.gobjectIntrospection.override { x11Support = false; };
+      gobject-introspection = super.gobject-introspection.override { x11Support = false; };
     }));
   };
 }

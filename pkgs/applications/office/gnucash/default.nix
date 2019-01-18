@@ -25,11 +25,11 @@ in
 
 stdenv.mkDerivation rec {
   name = "gnucash-${version}";
-  version = "3.1-1";
+  version = "3.4";
 
   src = fetchurl {
     url = "mirror://sourceforge/gnucash/${name}.tar.bz2";
-    sha256 = "0qfjpmr6hnr0v7l2fi00rilnlyan4kqiyygyidxlpdxqqg76dvx1";
+    sha256 = "1ms2wg4sh5gq3rpjmmnp85rh5nc9ahca1imxkvhz4d3yiwy8hm52";
   };
 
   nativeBuildInputs = [ pkgconfig makeWrapper cmake gtest ];
@@ -42,6 +42,10 @@ stdenv.mkDerivation rec {
   ] ++ (with perlPackages; [ FinanceQuote DateManip ]);
 
   propagatedUserEnvPkgs = [ dconf ];
+
+  # glib-2.58 deprecrated g_type_class_add_private
+  # Should probably be removed next version bump
+  CXXFLAGS = [ "-Wno-deprecated-declarations" ];
 
   postPatch = ''
     patchShebangs .

@@ -1,7 +1,7 @@
 { stdenv, buildGoPackage, fetchFromGitHub, git, gnupg, xclip, makeWrapper }:
 
 buildGoPackage rec {
-  version = "1.8.1";
+  version = "1.8.4";
   name = "gopass-${version}";
 
   goPackagePath = "github.com/gopasspw/gopass";
@@ -12,7 +12,7 @@ buildGoPackage rec {
     owner = "gopasspw";
     repo = "gopass";
     rev = "v${version}";
-    sha256 = "1b3caydxz3zf1ky6qvkx0dgidlalvpmga6cjh3gqc269n00lwh6w";
+    sha256 = "1gw16k09vwarh5qz118s7w2j090phdrrgd2h1q52pv93jpi3br7n";
   };
 
   wrapperPath = with stdenv.lib; makeBinPath ([
@@ -26,9 +26,6 @@ buildGoPackage rec {
       $bin/share/bash-completion/completions \
       $bin/share/zsh/site-functions \
       $bin/share/fish/vendor_completions.d
-    # by default, gopass tries to write configuration to /homeless-shelter
-    # during startup, which lands in stdout
-    export GOPASS_CONFIG=/dev/null
     $bin/bin/gopass completion bash > $bin/share/bash-completion/completions/_gopass
     $bin/bin/gopass completion zsh  > $bin/share/zsh/site-functions/_gopass
     $bin/bin/gopass completion fish > $bin/share/fish/vendor_completions.d/gopass.fish

@@ -1,19 +1,21 @@
 { stdenv, fetchFromGitHub
-, pkgconfig, tcl, readline, libffi, python3, bison, flex
+, pkgconfig, bison, flex
+, tcl, readline, libffi, python3
+, protobuf
 }:
 
 with builtins;
 
 stdenv.mkDerivation rec {
   name = "yosys-${version}";
-  version = "2018.05.03";
+  version = "2019.01.08";
 
   srcs = [
     (fetchFromGitHub {
       owner  = "yosyshq";
       repo   = "yosys";
-      rev    = "a572b495387743a58111e7264917a497faa17ebf";
-      sha256 = "0q4xh4sy3n83c8il8lygzv0i6ca4qw36i2k6qz6giw0wd2pkibkb";
+      rev    = "2a2e0a4722ded7628b71f436b94a06aebd57bb62";
+      sha256 = "19wzh7yssk90s58l2f89m0q5bjjrjpkhvikf5zc0563wccvl712c";
       name   = "yosys";
     })
 
@@ -23,8 +25,8 @@ stdenv.mkDerivation rec {
     (fetchFromGitHub {
       owner  = "berkeley-abc";
       repo   = "abc";
-      rev    = "f23ea8e33f6d5cc54f58bec6d9200483e5d8c704";
-      sha256 = "1xwmq3k5hfavdrs7zbqjxh35kr2pis4i6hhzrq7qzyzs0az0hls9";
+      rev    = "2ddc57d8760d94e86699be39a628178cff8154f8";
+      sha256 = "0da7nnnnl9cq2r7s301xgdc8nlr6hqmqpvd9zn4b58m125sp0scl";
       name   = "yosys-abc";
     })
   ];
@@ -32,7 +34,9 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
   nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ tcl readline libffi python3 bison flex ];
+  buildInputs = [ tcl readline libffi python3 bison flex protobuf ];
+
+  makeFlags = [ "ENABLE_PROTOBUF=1" ];
 
   patchPhase = ''
     substituteInPlace ../yosys-abc/Makefile \
@@ -49,6 +53,9 @@ stdenv.mkDerivation rec {
     make config-${if stdenv.cc.isClang or false then "clang" else "gcc"}
     echo 'ABCREV := default' >> Makefile.conf
     makeFlags="PREFIX=$out $makeFlags"
+
+    # we have to do this ourselves for some reason...
+    (cd misc && ${protobuf}/bin/protoc --cpp_out ../backends/protobuf/ ./yosys.proto)
   '';
 
   meta = {

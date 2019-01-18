@@ -7,11 +7,11 @@
 
 stdenv.mkDerivation rec {
   name = "deja-dup-${version}";
-  version = "38.0";
+  version = "38.1";
 
   src = fetchurl {
     url = "https://launchpad.net/deja-dup/${stdenv.lib.versions.major version}/${version}/+download/deja-dup-${version}.tar.xz";
-    sha256 = "1l3sa24v0v6xf312h36jikfi8zyx6z3nmc7pjzgdp7l89gkdm65v";
+    sha256 = "0wm7z72qbsljzsysxg8h5sbpg56ignn9mp8v3xynn12dv3gv6rba";
   };
 
   patches = [
@@ -39,7 +39,7 @@ stdenv.mkDerivation rec {
 
   propagatedUserEnvPkgs = [ duplicity ];
 
-  PKG_CONFIG_LIBNAUTILUS_EXTENSION_EXTENSIONDIR = "lib/nautilus/extensions-3.0";
+  PKG_CONFIG_LIBNAUTILUS_EXTENSION_EXTENSIONDIR = "${placeholder "out"}/lib/nautilus/extensions-3.0";
 
   postInstall = ''
     glib-compile-schemas $out/share/glib-2.0/schemas

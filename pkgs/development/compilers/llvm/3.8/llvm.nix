@@ -8,7 +8,6 @@
 , libffi
 , libbfd
 , libxml2
-, valgrind
 , ncurses
 , version
 , zlib
@@ -98,8 +97,6 @@ in stdenv.mkDerivation rec {
 
   postBuild = ''
     rm -fR $out
-
-    paxmark m bin/{lli,llvm-rtdyld}
   '';
 
   postInstall = stdenv.lib.optionalString (stdenv.isDarwin && enableSharedLibraries) ''
@@ -114,7 +111,7 @@ in stdenv.mkDerivation rec {
     description = "Collection of modular and reusable compiler and toolchain technologies";
     homepage    = http://llvm.org/;
     license     = stdenv.lib.licenses.ncsa;
-    maintainers = with stdenv.lib.maintainers; [ lovek323 raskin viric ];
+    maintainers = with stdenv.lib.maintainers; [ lovek323 raskin ];
     platforms   = stdenv.lib.platforms.all;
   };
 }
